@@ -9,5 +9,7 @@ Example:
 
 Ensure that you have this env variables:
 
-`export POLONIEX_KEY="..."`
-`export POLONIEX_SECRET="..."`
+```
+export POLONIEX_KEY="..."
+export POLONIEX_SECRET="..."
+```
