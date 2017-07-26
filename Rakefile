@@ -226,3 +226,8 @@ end
 #   binding.pry
 # end
 
+task :test_best do
+  tester = Tester.new
+  puts tester.run(*[-467, -433, 424, -406, -313, 69, 351])
+end
+
