@@ -36,12 +36,20 @@ class Tester
       # decisions << decision
 
       if decision == 1 && usd_balance > 0
-        pp [dates[i], "buy BTC", usd_balance, close] if print_allowed
+        puts [dates[i], "buy BTC", usd_balance.round(2), close.round(2)].join(", ") if print_allowed
         btc_balance = usd_balance / close*(1-0.0025)
         usd_balance = 0
         last_buy_price = close
       elsif decision == -1 && btc_balance > 0
-        pp [dates[i], "sell BTC", btc_balance, close, close - last_buy_price] if print_allowed
+        if print_allowed
+          gain = ((1-0.0025)*btc_balance*(close - last_buy_price)).round(2)
+          if gain < 0
+            gain = (gain.to_s + " USD").colorize(:red)
+          else
+            gain = ("+" + gain.to_s + " USD").colorize(:green)
+          end
+          puts [dates[i], "sell BTC", btc_balance.round(2), close.round(2), gain].join(", ")
+        end
         usd_balance = btc_balance * close*(1-0.0025)
         btc_balance = 0
       end
@@ -228,6 +236,7 @@ end
 
 task :test_best do
   tester = Tester.new
+  tester.print_allowed = true
   puts tester.run(*[-467, -433, 424, -406, -313, 69, 351])
 end
 
