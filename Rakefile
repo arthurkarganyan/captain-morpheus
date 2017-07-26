@@ -7,10 +7,8 @@ end
 
 task :magnus do
   require 'redis'
-  redis = Redis.new(db: 2)
+  redis = Redis.new(db: 4)
   PAIR = "USDT_BTC"
-
-  redis.select(4)
 
   INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
 
@@ -81,70 +79,70 @@ task :magnus do
 
   $results ||= []
 
-  class Magnus
-    include Darwinning
-
-    GENE_RANGES = {
-      rsi12_coef: (-100..100),
-      mavg12_coef: (-100..100),
-      mavg24_coef: (-100..100),
-      trend12_coef: (-100..100),
-      trend24_coef: (-100..100),
-      lastdeal_coef: (-100..100),
-      threshold: (1..100),
-    }
-
-    attr_accessor :rsi12_coef, :mavg12_coef, :mavg24_coef, :trend12_coef, :trend24_coef, :lastdeal_coef, :threshold
-
-    def fitness
-      return @result if @result
-      # Try to get the sum of the 3 digits to add up to 100
-      # (first_number + second_number + third_number - 100).abs
-      last_buy_price = 0
-
-      usd_balance = START_USD
-      btc_balance = 0.0
-      30.upto(ary.size-1) do |i|
-        # x=ary[i]
-        # sum = rsi12_coef*x['12rsi'] +
-        #   mavg12_coef*x['12movingavg'] +
-        #   mavg24_coef*x['24movingavg'] +
-        #   trend12_coef*x['12trend'] +
-        #   trend24_coef*x['24trend'] +
-        #   lastdeal_coef*last_buy_price
-
-        if sum > threshold then
-          decision = 1
-        elsif sum < -threshold
-          decision = -1
-        else
-          # decision = -1
-          decision = 0
-        end
-
-        if decision == 1 && usd_balance > 0
-          # pp ["buy BTC", usd_balance, x['close']]
-          btc_balance = (usd_balance / x['close']) #*(1-0.0025)
-          usd_balance = 0
-          last_buy_price = x['close']
-        elsif decision == -1 && btc_balance > 0
-          # pp ["sell BTC", btc_balance, x['close']]
-          usd_balance = btc_balance * x['close'] #*(1-0.0025)
-          btc_balance = 0
-        end
-
-        # p([usd_balance, btc_balance])
-        # p decision
-      end
-
-      @result = usd_balance + btc_balance * ary.last['close']
-      @result = 0.1 if @result == START_USD
-      $results << @result
-      @result
-    end
-
-    # attr_reader :result
-  end
+  # class Magnus
+  #   include Darwinning
+  #
+  #   GENE_RANGES = {
+  #     rsi12_coef: (-100..100),
+  #     mavg12_coef: (-100..100),
+  #     mavg24_coef: (-100..100),
+  #     trend12_coef: (-100..100),
+  #     trend24_coef: (-100..100),
+  #     lastdeal_coef: (-100..100),
+  #     threshold: (1..100),
+  #   }
+  #
+  #   attr_accessor :rsi12_coef, :mavg12_coef, :mavg24_coef, :trend12_coef, :trend24_coef, :lastdeal_coef, :threshold
+  #
+  #   def fitness
+  #     return @result if @result
+  #     # Try to get the sum of the 3 digits to add up to 100
+  #     # (first_number + second_number + third_number - 100).abs
+  #     last_buy_price = 0
+  #
+  #     usd_balance = START_USD
+  #     btc_balance = 0.0
+  #     30.upto(ary.size-1) do |i|
+  #       # x=ary[i]
+  #       # sum = rsi12_coef*x['12rsi'] +
+  #       #   mavg12_coef*x['12movingavg'] +
+  #       #   mavg24_coef*x['24movingavg'] +
+  #       #   trend12_coef*x['12trend'] +
+  #       #   trend24_coef*x['24trend'] +
+  #       #   lastdeal_coef*last_buy_price
+  #
+  #       if sum > threshold then
+  #         decision = 1
+  #       elsif sum < -threshold
+  #         decision = -1
+  #       else
+  #         # decision = -1
+  #         decision = 0
+  #       end
+  #
+  #       if decision == 1 && usd_balance > 0
+  #         # pp ["buy BTC", usd_balance, x['close']]
+  #         btc_balance = (usd_balance / x['close']) #*(1-0.0025)
+  #         usd_balance = 0
+  #         last_buy_price = x['close']
+  #       elsif decision == -1 && btc_balance > 0
+  #         # pp ["sell BTC", btc_balance, x['close']]
+  #         usd_balance = btc_balance * x['close'] #*(1-0.0025)
+  #         btc_balance = 0
+  #       end
+  #
+  #       # p([usd_balance, btc_balance])
+  #       # p decision
+  #     end
+  #
+  #     @result = usd_balance + btc_balance * ary.last['close']
+  #     @result = 0.1 if @result == START_USD
+  #     $results << @result
+  #     @result
+  #   end
+  #
+  #   # attr_reader :result
+  # end
 
   # fitness_goal, population_size = 10, generations_limit = 100
   # magnus_pop = Magnus.build_population(120, 20, 3, [
@@ -156,7 +154,8 @@ task :magnus do
   # magnus_pop.evolve! # evolve until fitness goal is or generations limit is met
   # pp magnus_pop.
   results = []
-  1000.times do
+  300.times do |iii|
+    puts iii
     rsi12_coef = r - 300
     mavg12_coef = r
     mavg24_coef = r
@@ -304,34 +303,4 @@ task :magnus do
   #     redis.rpush("#{pair}:#{PERIOD}:#{key}", ary)
   #   end
   # end
-end
-
-require 'darwinning'
-
-task :ev do
-  class Triple
-    include Darwinning
-
-    GENE_RANGES = {
-      first_number: (0..100),
-      second_number: (0..100),
-      third_number: (0..100)
-    }
-
-    attr_accessor :first_number, :second_number, :third_number
-
-    def fitness
-      # Try to get the sum of the 3 digits to add up to 100
-      (first_number + second_number + third_number - 100).abs
-    end
-  end
-
-  if Triple.is_evolveable?
-    triple_pop = Triple.build_population(0, 10, 100)
-    triple_pop.evolve! # evolve until fitness goal is or generations limit is met
-
-    pp "Best member: #{triple_pop.best_member}"
-  end
-  require 'pry'
-  binding.pry
 end
