@@ -9,39 +9,19 @@ task :magnus do
   require 'redis'
   redis = Redis.new(db: 4)
   PAIR = "USDT_BTC"
-
   INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
-
-  # 12rsi * rsi12coef
-
-  # last
 
   # every candle I can buy, wait or sell
 
-  PERIOD = 300 # 30 minutes
+  PERIOD = 300 # 5 minutes
+  TRIES_NUMBER = 300
+  START_USD = 100.0
 
   all_size = redis.llen("#{PAIR}:#{PERIOD}:close")
-  # s.times do |i|
-  #   puts((INDICATORS + ['close']).map do |j|
-  #     key = "#{PAIR}:#{PERIOD}:#{j}"
-  #     ary=redis.lrange(key, i, i)
-  #   end.join(", "))
-  # end
 
-  # puts (INDICATORS + ['close']).join(', ')
   ary = []
-
-  # s.times do |i|
-  #   h = {}
-  #   (INDICATORS + ['close']).map do |j|
-  #     key = "#{PAIR}:#{PERIOD}:#{j}"
-  #     h[j] = redis.lrange(key, i, i)[0].to_f
-  #   end
-  #   ary << h
-  # end
-
-  all_size
   s = all_size
+
   # from = 100000
   # from = all_size - s - 10
   from = 0
@@ -53,20 +33,8 @@ task :magnus do
 
   puts "Redis read"
 
-  # s.times do |i|
-  #   h = {}
-  #   (INDICATORS + ['close']).map do |j|
-  #     key = "#{PAIR}:#{PERIOD}:#{j}"
-  #     h[j] = redis.lrange(key, i, i)[0].to_f
-  #   end
-  #   ary << h
-  # end
-
-
   require 'pry'
-  # INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
 
-  START_USD = 100.0
   results = []
   last_buy_price = 0
 
@@ -77,85 +45,10 @@ task :magnus do
     (rand(1000)+minus)
   end
 
-  $results ||= []
-
-  # class Magnus
-  #   include Darwinning
-  #
-  #   GENE_RANGES = {
-  #     rsi12_coef: (-100..100),
-  #     mavg12_coef: (-100..100),
-  #     mavg24_coef: (-100..100),
-  #     trend12_coef: (-100..100),
-  #     trend24_coef: (-100..100),
-  #     lastdeal_coef: (-100..100),
-  #     threshold: (1..100),
-  #   }
-  #
-  #   attr_accessor :rsi12_coef, :mavg12_coef, :mavg24_coef, :trend12_coef, :trend24_coef, :lastdeal_coef, :threshold
-  #
-  #   def fitness
-  #     return @result if @result
-  #     # Try to get the sum of the 3 digits to add up to 100
-  #     # (first_number + second_number + third_number - 100).abs
-  #     last_buy_price = 0
-  #
-  #     usd_balance = START_USD
-  #     btc_balance = 0.0
-  #     30.upto(ary.size-1) do |i|
-  #       # x=ary[i]
-  #       # sum = rsi12_coef*x['12rsi'] +
-  #       #   mavg12_coef*x['12movingavg'] +
-  #       #   mavg24_coef*x['24movingavg'] +
-  #       #   trend12_coef*x['12trend'] +
-  #       #   trend24_coef*x['24trend'] +
-  #       #   lastdeal_coef*last_buy_price
-  #
-  #       if sum > threshold then
-  #         decision = 1
-  #       elsif sum < -threshold
-  #         decision = -1
-  #       else
-  #         # decision = -1
-  #         decision = 0
-  #       end
-  #
-  #       if decision == 1 && usd_balance > 0
-  #         # pp ["buy BTC", usd_balance, x['close']]
-  #         btc_balance = (usd_balance / x['close']) #*(1-0.0025)
-  #         usd_balance = 0
-  #         last_buy_price = x['close']
-  #       elsif decision == -1 && btc_balance > 0
-  #         # pp ["sell BTC", btc_balance, x['close']]
-  #         usd_balance = btc_balance * x['close'] #*(1-0.0025)
-  #         btc_balance = 0
-  #       end
-  #
-  #       # p([usd_balance, btc_balance])
-  #       # p decision
-  #     end
-  #
-  #     @result = usd_balance + btc_balance * ary.last['close']
-  #     @result = 0.1 if @result == START_USD
-  #     $results << @result
-  #     @result
-  #   end
-  #
-  #   # attr_reader :result
-  # end
-
-  # fitness_goal, population_size = 10, generations_limit = 100
-  # magnus_pop = Magnus.build_population(120, 20, 3, [
-  #   Darwinning::EvolutionTypes::Reproduction.new(crossover_method: :alternating_swap),
-  #   Darwinning::EvolutionTypes::Mutation.new(mutation_rate: 30.0)
-  # ]
-  # )
-  # binding.pry
-  # magnus_pop.evolve! # evolve until fitness goal is or generations limit is met
-  # pp magnus_pop.
   results = []
-  300.times do |iii|
-    puts iii
+
+  TRIES_NUMBER.times do |iii|
+    puts "[#{iii}/#{TRIES_NUMBER}]"
     rsi12_coef = r - 300
     mavg12_coef = r
     mavg24_coef = r
@@ -215,10 +108,26 @@ task :magnus do
   puts "[result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]"
   ary = results.sort_by { |i| i.first }
   pp ary
+  puts ""
+  puts ""
   puts "[result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]"
-  pp ary[0]
 
-  #  [7847052.289021084, -690, 275, -125, 376, -427, -47, -14],
+  puts "Best candidate:"
+  pp ary.last
+
+  puts ""
+  puts "Final result from #{START_USD} USD:"
+  puts "#{ary.last[0].round(2)} USD"
+  puts ""
+
+  puts "Expected profit from #{START_USD} USD:"
+  puts "+#{ary.last[0].round(2) - START_USD} USD"
+
+  puts ""
+  puts "Wow!"
+
+  # Best:
+  # [7847052.289021084, -690, 275, -125, 376, -427, -47, -14],
   # [8188181.811712229, -734, 132, -180, 34, 476, 168, 256],
   # [8211632.287761635, -775, 69, -87, -477, -46, 132, -113],
   # [8277561.820051758, -634, -459, 379, 489, -465, 170, 249],
@@ -237,7 +146,6 @@ task :magnus do
   # [4958.1343856800695, -358, -142, 135, -320, 302, -254, 448],
   # [4958.1343856800695, 224, -482, -81, -362, -105, 106, 207],
   # [4958.1343856800695, -230, -245, -404, -58, 113, -476, -15]]
-
 
   # For all the time:
   # [12323904.371836694, -436, 167, -264, -7, -109, 181, 456],
@@ -259,46 +167,10 @@ task :magnus do
   # 43.0, 6.0, 38.0, 33.0, 17.0, 49.0
   # -38.0, 41.0, -47.0, 19.0, -7.0, 39.0
 
-  # ary.size.times do |i|
-  #   ary[i]
-  # end
-
   # [347.35138191817833, -379, -10, 346, 231, -261, -227, 244],
   #   [352.43118221949123, -720, -54, 477, -118, 208, -325, 425],
   #   [363.81452213261855, -580, 231, 364, 482, -362, -447, 171],
   #   [432.01033959804795, 62, 139, -381, -342, -127, 388, 479],
   #   [435.00256935043296, -150, -216, -168, 210, 73, 411, -384]]
   #
-
-  # Magnus algorithm:
-  #   if RSI.around(40
-
-  # PAIRS.each do |pair|
-  #   sizes = KEYS.map { |i| redis.llen("#{pair}:#{PERIOD}:#{i}") }
-  #   if sizes.uniq.size != 1
-  #     puts "inconsistency!"
-  #     keys = redis.keys("#{pair}:#{PERIOD}:*")
-  #     keys.each { |key| redis.del(key) }
-  #   end
-  #   last_date = redis.lrange("#{pair}:#{PERIOD}:date", -1, -1)[0].to_i
-  #   time_passed = Time.now.to_i - last_date
-  #   # require 'pry'
-  #   # binding.pry
-  #   next if time_passed < PERIOD
-  #   start_date = last_date || 3.month.ago.begin.to_i
-  #   opts = {
-  #     period: PERIOD,
-  #     start_date: start_date,
-  #     end_date: Time.now.to_i
-  #   }
-  #   h = PoloniexWrapper.chart_data(pair, opts)
-  #   h.pop # last is current!
-  #   KEYS.each do |key|
-  #     ary = []
-  #     h.each do |i|
-  #       ary << i[key]
-  #     end
-  #     redis.rpush("#{pair}:#{PERIOD}:#{key}", ary)
-  #   end
-  # end
 end
