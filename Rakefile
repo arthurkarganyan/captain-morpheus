@@ -217,8 +217,6 @@ task :magnus do
   pp ary
   puts "[result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]"
   pp ary[0]
-  binding.pry
-
 
   #  [7847052.289021084, -690, 275, -125, 376, -427, -47, -14],
   # [8188181.811712229, -734, 132, -180, 34, 476, 168, 256],
