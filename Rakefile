@@ -91,6 +91,7 @@ class CandlePicker
     KEYS.each do |key|
       ary = []
       CSV.foreach(csv_path) do |row|
+        next if row[0] == 'date'
         ary << row[KEYS.index(key)]
       end
       redis.rpush("#{pair}:#{period}:#{key}", ary)
