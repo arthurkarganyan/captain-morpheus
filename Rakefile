@@ -4,10 +4,6 @@ require 'pp'
 require 'colorize'
 require 'active_support/all'
 
-task :c do
-  binding.pry
-end
-
 # LPUSH pairs USDT_BTC USDT_LTC USDT_ETH
 
 class Tester
@@ -17,6 +13,7 @@ class Tester
     last_buy_price = 0
     usd_balance = START_USD
     btc_balance = 0.0
+    decisions = []
 
     from.upto(to) do |i|
       sum = rsi12_coef*ary[0][i] +
@@ -35,6 +32,8 @@ class Tester
       else
         decision = 0
       end
+      #
+      # decisions << decision
 
       if decision == 1 && usd_balance > 0
         pp [dates[i], "buy BTC", usd_balance, close] if print_allowed
@@ -42,12 +41,13 @@ class Tester
         usd_balance = 0
         last_buy_price = close
       elsif decision == -1 && btc_balance > 0
-        pp [dates[i], "sell BTC", btc_balance, close] if print_allowed
+        pp [dates[i], "sell BTC", btc_balance, close, close - last_buy_price] if print_allowed
         usd_balance = btc_balance * close*(1-0.0025)
         btc_balance = 0
       end
     end
 
+    # return 0 if decisions.count { |i| i == 1} == 0
     usd_balance + btc_balance * ary.last.last
   end
 
@@ -65,6 +65,7 @@ class Tester
 
     (INDICATORS + ['close']).map do |j|
       @ary << redis.lrange(construct_key(j), 0, all_size).map(&:to_f)
+      puts "Loading #{j}"
     end
 
     @ary
@@ -91,13 +92,15 @@ INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
 # every candle I can buy, wait or sell
 
 PERIOD = 300 # 5 minutes
-TRIES_NUMBER = 300
+TRIES_NUMBER = 3000
 START_USD = 100.0
 
 task :magnus do
   results = []
 
   tester = Tester.new
+  tester.dates
+  tester.ary
 
   step = 1.month/PERIOD
 
@@ -117,7 +120,7 @@ task :magnus do
       break if do_brake || x + step > tester.ary[0].size-1
       result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold, x, x+step)
 
-      if result < 120.0
+      if result < 90.0
         result = 0
         do_brake = true
       end
@@ -125,8 +128,10 @@ task :magnus do
 
     if result > 0
       result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
-      p result
-      results << [result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]
+      if result > 500
+        to_add = [result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]
+        results << to_add
+      end
     end
   end
 
@@ -216,3 +221,8 @@ task :magnus do
   # rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold = [-709, 140, 20, 389, 98, -51, 464]
   # [190167541620.42578, -422, -121, -2, 153, 356, -71, -279]
 end
+
+# task :c do
+#   binding.pry
+# end
+
