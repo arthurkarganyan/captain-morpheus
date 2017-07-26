@@ -141,16 +141,16 @@ task :magnus do
   puts "Wow!"
   puts ""
 
-  # puts ""
-  # puts "Testing best:"
-  # puts ""
+  puts ""
+  puts "Testing best:"
+  puts ""
 
-  # tester.print_allowed= true
-  #
-  # best = results.last
-  # best.shift
-  #
-  # puts tester.run(*best)
+  tester.print_allowed= true
+
+  best = results.last
+  best.shift
+
+  puts tester.run(*best)
 
   # Best:
   # [7847052.289021084, -690, 275, -125, 376, -427, -47, -14],
