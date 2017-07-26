@@ -45,6 +45,10 @@ class Tester
         usd_balance = btc_balance * close*(1-0.0025)
         btc_balance = 0
       end
+
+      if i > 10000 && usd_balance + btc_balance * close < START_USD*1.05
+        return 0
+      end
     end
 
     usd_balance + btc_balance * ary.last.last
@@ -75,7 +79,7 @@ class Tester
 
   def dates
     return @dates if @dates
-    @dates = redis.lrange(construct_key("date"), 0, all_size).map {|i| Time.at(i.to_i) }
+    @dates = redis.lrange(construct_key("date"), 0, all_size).map { |i| Time.at(i.to_i) }
     @dates
   end
 end
@@ -90,7 +94,7 @@ INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
 # every candle I can buy, wait or sell
 
 PERIOD = 300 # 5 minutes
-TRIES_NUMBER = 300
+TRIES_NUMBER = 3000
 START_USD = 100.0
 
 task :magnus do
@@ -110,27 +114,28 @@ task :magnus do
 
     result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
 
-    results << [result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]
+    if result > 0
+      results << [result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]
+    end
   end
 
   puts "[result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]"
-  ary = results.sort_by { |i| i.first }
-  pp ary
+  results = results.sort_by { |i| i.first }
+  pp results
   puts ""
   puts ""
   puts "[result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]"
 
   puts "Best candidate:"
-  pp ary.last
+  pp results.last
 
   puts ""
   puts "Final result from #{START_USD} USD:"
-  puts "#{ary.last[0].round(2)} USD"
+  puts "#{results.last[0].round(2)} USD"
   puts ""
 
   puts "Expected profit from #{START_USD} USD:"
-  puts "+#{ary.last[0].round(2) - START_USD} USD"
-  puts "+#{(((ary.last[0].round(2) - START_USD) / START_USD)*100.0).round(2)} %"
+  puts "+#{results.last[0].round(2) - START_USD} USD"
 
   puts ""
   puts "Wow!"
@@ -142,7 +147,7 @@ task :magnus do
 
   # tester.print_allowed= true
   #
-  # best = ary.last
+  # best = results.last
   # best.shift
   #
   # puts tester.run(*best)
