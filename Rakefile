@@ -2,6 +2,7 @@ require 'pry'
 require 'redis'
 require 'pp'
 require 'colorize'
+require 'active_support/all'
 
 task :c do
   binding.pry
@@ -12,12 +13,12 @@ end
 class Tester
   attr_accessor :print_allowed
 
-  def run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
+  def run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold, from = 30, to = ary[0].size-1)
     last_buy_price = 0
     usd_balance = START_USD
     btc_balance = 0.0
 
-    30.upto(ary[0].size-1) do |i|
+    from.upto(to) do |i|
       sum = rsi12_coef*ary[0][i] +
         mavg12_coef*ary[1][i] +
         mavg24_coef*ary[2][i] +
@@ -44,10 +45,6 @@ class Tester
         pp [dates[i], "sell BTC", btc_balance, close] if print_allowed
         usd_balance = btc_balance * close*(1-0.0025)
         btc_balance = 0
-      end
-
-      if i > 10000 && usd_balance + btc_balance * close < START_USD*1.05
-        return 0
       end
     end
 
@@ -94,13 +91,15 @@ INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
 # every candle I can buy, wait or sell
 
 PERIOD = 300 # 5 minutes
-TRIES_NUMBER = 3000
+TRIES_NUMBER = 300
 START_USD = 100.0
 
 task :magnus do
   results = []
 
   tester = Tester.new
+
+  step = 1.month/PERIOD
 
   TRIES_NUMBER.times do |iii|
     puts "[#{iii}/#{TRIES_NUMBER}]"
@@ -112,9 +111,21 @@ task :magnus do
     lastdeal_coef = r
     threshold = r
 
-    result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
+    do_brake = false
+    result = 0
+    for x in (30..(tester.ary[0].size-1)).step(step)
+      break if do_brake || x + step > tester.ary[0].size-1
+      result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold, x, x+step)
+
+      if result < 120.0
+        result = 0
+        do_brake = true
+      end
+    end
 
     if result > 0
+      result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
+      p result
       results << [result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]
     end
   end
@@ -151,6 +162,8 @@ task :magnus do
   best.shift
 
   puts tester.run(*best)
+
+  binding.pry
 
   # Best:
   # [7847052.289021084, -690, 275, -125, 376, -427, -47, -14],
