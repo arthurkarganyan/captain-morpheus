@@ -5,4 +5,4 @@ gem 'rake'
 gem 'redis', require: false
 
 gem 'activesupport'
-# gem 'darwinning'
+gem 'colorize'

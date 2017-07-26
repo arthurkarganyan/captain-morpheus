@@ -1,74 +1,23 @@
+require 'pry'
+require 'redis'
+require 'pp'
+require 'colorize'
+
 task :c do
-  require 'pry'
   binding.pry
 end
 
 # LPUSH pairs USDT_BTC USDT_LTC USDT_ETH
 
-task :magnus do
-  require 'redis'
-  redis = Redis.new(db: 4)
-  PAIR = "USDT_BTC"
-  INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
+class Tester
+  attr_accessor :print_allowed
 
-  # every candle I can buy, wait or sell
-
-  PERIOD = 300 # 5 minutes
-  TRIES_NUMBER = 300
-  START_USD = 100.0
-
-  all_size = redis.llen("#{PAIR}:#{PERIOD}:close")
-
-  ary = []
-  s = all_size
-
-  # from = 100000
-  # from = all_size - s - 10
-  from = 0
-
-  (INDICATORS + ['close']).map do |j|
-    key = "#{PAIR}:#{PERIOD}:#{j}"
-    ary << redis.lrange(key, from, from+s).map(&:to_f)
-  end
-
-  puts "Redis read"
-
-  require 'pry'
-
-  results = []
-  last_buy_price = 0
-
-  usd_balance = START_USD
-  btc_balance = 0.0
-
-  def r(minus = -500)
-    (rand(1000)+minus)
-  end
-
-  results = []
-
-  TRIES_NUMBER.times do |iii|
-    puts "[#{iii}/#{TRIES_NUMBER}]"
-    rsi12_coef = r - 300
-    mavg12_coef = r
-    mavg24_coef = r
-    trend12_coef = r
-    trend24_coef = r
-    lastdeal_coef = r
-    threshold = r
-    btc_balance = 0
+  def run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
+    last_buy_price = 0
     usd_balance = START_USD
-
-    # rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold = [-709, 140, 20, 389, 98, -51, 464]
+    btc_balance = 0.0
 
     30.upto(ary[0].size-1) do |i|
-      # x=ary[i]
-      # sum = rsi12_coef*x['12rsi'] +
-      #   mavg12_coef*x['12movingavg'] +
-      #   mavg24_coef*x['24movingavg'] +
-      #   trend12_coef*x['12trend'] +
-      #   trend24_coef*x['24trend'] +
-      #   lastdeal_coef*last_buy_price
       sum = rsi12_coef*ary[0][i] +
         mavg12_coef*ary[1][i] +
         mavg24_coef*ary[2][i] +
@@ -87,24 +36,83 @@ task :magnus do
       end
 
       if decision == 1 && usd_balance > 0
-        # pp ["buy BTC", usd_balance, close]
+        pp [dates[i], "buy BTC", usd_balance, close] if print_allowed
         btc_balance = usd_balance / close*(1-0.0025)
         usd_balance = 0
         last_buy_price = close
       elsif decision == -1 && btc_balance > 0
-        # pp ["sell BTC", btc_balance, close]
+        pp [dates[i], "sell BTC", btc_balance, close] if print_allowed
         usd_balance = btc_balance * close*(1-0.0025)
         btc_balance = 0
       end
     end
 
-    result = usd_balance + btc_balance * ary.last.last
+    usd_balance + btc_balance * ary.last.last
+  end
+
+  def redis
+    @redis ||= Redis.new(db: 4)
+  end
+
+  def all_size
+    @all_size ||= redis.llen("#{PAIR}:#{PERIOD}:close")
+  end
+
+  def ary
+    return @ary if @ary
+    @ary = []
+
+    (INDICATORS + ['close']).map do |j|
+      @ary << redis.lrange(construct_key(j), 0, all_size).map(&:to_f)
+    end
+
+    @ary
+  end
+
+  def construct_key(key)
+    "#{PAIR}:#{PERIOD}:#{key}"
+  end
+
+  def dates
+    return @dates if @dates
+    @dates = redis.lrange(construct_key("date"), 0, all_size).map {|i| Time.at(i.to_i) }
+    @dates
+  end
+end
+
+def r(minus = -500)
+  (rand(1000)+minus)
+end
+
+PAIR = "USDT_BTC"
+INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
+
+# every candle I can buy, wait or sell
+
+PERIOD = 300 # 5 minutes
+TRIES_NUMBER = 300
+START_USD = 100.0
+
+task :magnus do
+  results = []
+
+  tester = Tester.new
+
+  TRIES_NUMBER.times do |iii|
+    puts "[#{iii}/#{TRIES_NUMBER}]"
+    rsi12_coef = r - 300
+    mavg12_coef = r
+    mavg24_coef = r
+    trend12_coef = r
+    trend24_coef = r
+    lastdeal_coef = r
+    threshold = r
+
+    result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
+
     results << [result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]
   end
 
-  # [190167541620.42578, -422, -121, -2, 153, 356, -71, -279]
-
-  require 'pp'
   puts "[result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]"
   ary = results.sort_by { |i| i.first }
   pp ary
@@ -122,9 +130,22 @@ task :magnus do
 
   puts "Expected profit from #{START_USD} USD:"
   puts "+#{ary.last[0].round(2) - START_USD} USD"
+  puts "+#{(((ary.last[0].round(2) - START_USD) / START_USD)*100.0).round(2)} %"
 
   puts ""
   puts "Wow!"
+  puts ""
+
+  # puts ""
+  # puts "Testing best:"
+  # puts ""
+
+  # tester.print_allowed= true
+  #
+  # best = ary.last
+  # best.shift
+  #
+  # puts tester.run(*best)
 
   # Best:
   # [7847052.289021084, -690, 275, -125, 376, -427, -47, -14],
@@ -173,4 +194,7 @@ task :magnus do
   #   [432.01033959804795, 62, 139, -381, -342, -127, 388, 479],
   #   [435.00256935043296, -150, -216, -168, 210, 73, 411, -384]]
   #
+
+  # rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold = [-709, 140, 20, 389, 98, -51, 464]
+  # [190167541620.42578, -422, -121, -2, 153, 356, -71, -279]
 end
