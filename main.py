@@ -16,7 +16,7 @@ close_list_key = pair+":"+str(period)+":close"
 
 if r.llen(close_list_key) != 0:
     close_list = r.lrange(close_list_key, 0, -1)
-    close_list.pop(0)
+    # close_list.pop(0)
     close_list = list(map(lambda x: float(x.decode("utf-8")), close_list))
     np_close_list = np.array(close_list)
     stock = stst.StockDataFrame.retype(pd.DataFrame(data=np_close_list, columns=["close"]))
