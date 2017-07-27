@@ -94,16 +94,20 @@ def r(minus = -500)
   (rand(1000)+minus)
 end
 
+def rand_ary(size, max)
+  Array.new(size) { rand(max)*(rand(2) == 0 ? -1 : 1) }
+end
+
 PAIR = "USDT_BTC"
 INDICATORS = %w(12rsi 12movingavg 24movingavg 12trend 24trend)
 
 # every candle I can buy, wait or sell
 
 PERIOD = 300 # 5 minutes
-TRIES_NUMBER = 3000
 START_USD = 100.0
 
 task :magnus do
+  TRIES_NUMBER = (ENV['tries'] || fail("define tries=[number]")).to_i
   results = []
 
   tester = Tester.new
@@ -114,19 +118,20 @@ task :magnus do
 
   TRIES_NUMBER.times do |iii|
     puts "[#{iii}/#{TRIES_NUMBER}]"
-    rsi12_coef = r - 300
-    mavg12_coef = r
-    mavg24_coef = r
-    trend12_coef = r
-    trend24_coef = r
-    lastdeal_coef = r
-    threshold = r
+    coefs = rand_ary(7, 500)
+    # rsi12_coef = r
+    # mavg12_coef = r
+    # mavg24_coef = r
+    # trend12_coef = r
+    # trend24_coef = r
+    # lastdeal_coef = r
+    # threshold = r
 
     do_brake = false
     result = 0
     for x in (30..(tester.ary[0].size-1)).step(step)
       break if do_brake || x + step > tester.ary[0].size-1
-      result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold, x, x+step)
+      result = tester.run(*coefs, x, x+step)
 
       if result < 90.0
         result = 0
@@ -135,9 +140,9 @@ task :magnus do
     end
 
     if result > 0
-      result = tester.run(rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold)
+      result = tester.run(*coefs)
       if result > 500
-        to_add = [result, rsi12_coef, mavg12_coef, mavg24_coef, trend12_coef, trend24_coef, lastdeal_coef, threshold]
+        to_add = [result, *coefs]
         results << to_add
       end
     end
@@ -230,9 +235,9 @@ task :magnus do
   # [190167541620.42578, -422, -121, -2, 153, 356, -71, -279]
 end
 
-# task :c do
-#   binding.pry
-# end
+task :c do
+  binding.pry
+end
 
 task :test_best do
   tester = Tester.new
