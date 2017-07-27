@@ -43,7 +43,7 @@ class CandlePicker
   end
 
   def redis
-    @redis ||= Redis.new(db: 4)
+    @redis ||= Redis.new(db: 4, host: ENV["REDIS_HOST"] || "127.0.0.1")
   end
 
   # def pairs
