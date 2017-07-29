@@ -125,6 +125,7 @@ class Magnus
     first_date = tester.dates.first.to_i
     from_date = DateTime.parse("2017-06-01").to_i
     from_count = (from_date - first_date) / PERIOD
+    from_count = 30
 
     tries_number.times do |iii|
       puts "[#{iii}/#{tries_number}]"
