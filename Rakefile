@@ -42,7 +42,11 @@ class CandlePicker
   end
 
   def redis
-    @redis ||= Redis.new(db: 4, host: ENV["REDIS_HOST"] || "127.0.0.1")
+    @redis ||= Redis.new(db: redis_db, host: ENV["REDIS_HOST"] || "127.0.0.1")
+  end
+
+  def redis_db
+    ENV["CANDLE_PICKER_REDIS_DB"] || fail("CANDLE_PICKER_REDIS_DB variable is not set")
   end
 
   # def pairs
