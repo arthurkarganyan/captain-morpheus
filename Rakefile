@@ -134,7 +134,7 @@ class CandlePicker
   end
 
   def polo_to_csv
-    h = PoloniexWrapper.chart_data(pair, opts)
+    h = Poloniex::Client.chart_data(pair, opts)
     puts "Size: #{h.size}"
     CSV.open(csv_path, "wb") do |csv|
       csv << h.first.keys
