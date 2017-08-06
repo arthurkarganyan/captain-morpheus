@@ -1,6 +1,6 @@
 GIT
-  remote: https://github.com/arthurkarganyan/poloniex
-  revision: 963ecd6a13ef9b645ac5b2de4f428558c61bec93
+  remote: git@bitbucket.org:generation-p/poloniex-ruby-client.git
+  revision: 97f85e99de33c782046f44b476ac809b43fbcf36
   specs:
     poloniex (1.0.3)
       addressable
