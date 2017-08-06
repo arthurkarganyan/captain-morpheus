@@ -1,7 +1,6 @@
 require 'bundler'
 Bundler.require(:default)
 
-require_relative 'lib/poloniex_wrapper'
 require 'active_support/all'
 
 task :c do
