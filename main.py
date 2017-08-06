@@ -3,10 +3,11 @@ import redis
 import numpy as np
 import stockstats as stst
 import pandas as pd
+import os
 
 # r = redis.StrictRedis(db=2)
 # pairs = r.lrange("pairs", 0, -1)
-r = redis.StrictRedis(db=4)
+r = redis.StrictRedis(db=int(os.environ['INDEXER_REDIS_DB']))
 period = 300
 avg_period = 12
 
