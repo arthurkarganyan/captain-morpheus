@@ -6,7 +6,7 @@ class Magnus # Carlsen
 
     input_ary.each do |i|
       if i.max > 1.0 || i.min < -1.0
-        i.map! { |j| sigmoid(j) }
+        i.map! { |j| j.to_sigmoid }
       end
     end
 

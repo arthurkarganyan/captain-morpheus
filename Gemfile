@@ -6,7 +6,7 @@ gem 'httparty'
 gem 'rake'
 
 gem 'activesupport'
-gem 'pry', require: false
+gem 'pry'
 gem 'redis'
 gem 'daemons', require: false
 

@@ -137,4 +137,12 @@ module Competitor
 
     [real_profit, balance_usd]
   end
+
+  # def usd_at(p_ary, n=(p_ary.size - 1))
+  #   fail if n%2!=1 || n > p_ary.size
+  #   return 1.0 if n == -1
+  #   increase = p_ary[n]/p_ary[n-1]
+  #   # p [n, p_ary[n], p_ary[n-1], p_ary[n] - p_ary[n-1], increase]
+  #   increase*usd_at(p_ary, n-2)
+  # end
 end

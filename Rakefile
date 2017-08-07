@@ -1,16 +1,4 @@
-require 'bundler'
-Bundler.require(:default)
-require 'active_support/all'
-
-require_relative 'app/captain'
 require_relative 'load_config'
-require_relative 'lib/chart_data'
-require_relative 'lib/competitor'
-require_relative 'lib/magnus'
-require_relative 'lib/leonardo'
-require_relative 'lib/rockefeller'
-require_relative 'lib/net_trainer'
-require_relative 'lib/plot_utils'
 
 task :c do
   binding.pry
@@ -19,13 +7,6 @@ end
 task :refresh_data do
 
 end
-
-
-
-def sigmoid(x)
-  1/(1+2.718281828459045**(-x))
-end
-
 
 task :magnus_test do
   n = Magnus.new($chart_data.specific(*INDICATORS))
@@ -47,19 +28,7 @@ task :magnus_test do
   # )
 end
 
-task :c do
-  binding.pry
-end
-
-# def usd_at(p_ary, n=(p_ary.size - 1))
-#   fail if n%2!=1 || n > p_ary.size
-#   return 1.0 if n == -1
-#   increase = p_ary[n]/p_ary[n-1]
-#   # p [n, p_ary[n], p_ary[n-1], p_ary[n] - p_ary[n-1], increase]
-#   increase*usd_at(p_ary, n-2)
-# end
-
-task :compete_leonardo do
+task :train_leonardo do
   train_range = -3000..-2950
 
   trained_leos = Array.new(20) do
@@ -70,17 +39,7 @@ task :compete_leonardo do
     leo.initial_possibility_used > 0.3
   end
 
-  # puts "Trained Leos:"
-  # trained_leos.each do |leo|
-  #   # puts "initial_possibility_used=#{leo.initial_possibility_used}"
-  #   profit = leo.profit_on_range(-100000..-1)
-  #   possibilities << [(profit.first-100.0)/(profit.last-100.0), leo.initial_possibility_used]
-  # end
-
-  # puts possibilities
-
   size = 50
-
   winners = []
 
   INTERVALS = 30

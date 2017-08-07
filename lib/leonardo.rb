@@ -118,8 +118,8 @@ class Leonardo # Da Vinci
 
   def normalize_indicators(rsi12, trend12, trend24)
     [rsi12,
-     sigmoid(trend12),
-     sigmoid(trend24)]
+     trend12.to_sigmoid,
+     trend24.to_sigmoid]
   end
 
   def generate_buys(range)
@@ -172,7 +172,14 @@ class Leonardo # Da Vinci
     obj = self.new
     obj.buy_net = m.first
     obj.sell_net = m.last
+    puts "Loaded #{path}"
     obj
+  end
+
+  def self.best
+    winners_path = BASE_PATH + 'winners'
+    best_max = `ls #{winners_path}`.chomp.split("\n").map { |i| i.split('.').first.to_i }.sort.last
+    load_from_file(winners_path + "/#{best_max}.leonardo.dump")
   end
 
   # def buys_and_sells

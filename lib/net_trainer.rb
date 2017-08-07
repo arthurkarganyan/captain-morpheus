@@ -116,15 +116,7 @@ class NetTrainer
       if (epoch + 1).modulo(100) == 0
         correctness_pc = (correct.to_f/(100 * domain.size))
 
-        if correctness_pc == 1.0
-          correctness_color = :green
-        elsif correctness_pc > 0.95
-          correctness_color = :yellow
-        else
-          correctness_color = :red
-        end
-
-        correctness_pc_str = correctness_pc.pc.colorize(correctness_color)
+        correctness_pc_str = correctness_pc.pc_traffic_light(1.0, 0.95)
         # puts "> epoch=#{epoch + 1}, Correct=#{correct}/#{100 * domain.size} #{correctness_pc_str}"
         print "#{correctness_pc_str} "
 
