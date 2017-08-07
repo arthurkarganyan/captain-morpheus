@@ -1,0 +1,64 @@
+digraph {
+    "VPN1" -> "candle-picker1"
+    "VPN2" -> "candle-picker2"
+    "VPN3" -> "candle-picker3"
+
+    "trader" -> "VPN4"
+
+    "Poloniex" -> "VPN1"
+    "Poloniex" -> "VPN2"
+    "Poloniex" -> "VPN3"
+
+    "VPN4" -> "Poloniex"
+
+    "candle-picker1" -> "redis[4]"
+    "candle-picker2" -> "redis[4]"
+    "candle-picker3" -> "redis[4]"
+
+    "redis[4]" -> "indexer"
+    "indexer" -> "redis[5]"
+
+    "redis[5]" -> "strategy-tester" 
+
+    "sparrow-bot" -> "redis[1]"
+    "redis[1]" -> "sparrow-bot"
+
+    "strategy-tester" -> "decision-maker"[label="Algorith determination"]
+    "decision-maker" -> "redis[8]"
+    "redis[8]" -> "trader"
+    "trader" -> "redis[1]"
+
+    subgraph cluster_1 {
+        "redis[1]" [shape=Cylinder];
+        "redis[4]" [shape=Cylinder];
+        "redis[5]" [shape=Cylinder];
+        "redis[8]" [shape=Cylinder];
+
+        label = "Redis";
+        color=red
+    }
+
+    subgraph cluster_2 {
+        node [style=filled];
+        "VPN1"
+        "VPN2"
+        "VPN3"
+        "VPN4"
+
+        label = "VPNs";
+        color=green
+    }
+
+    subgraph cluster_3 {
+        node [style=filled];
+        "candle-picker1"
+        "candle-picker2"
+        "candle-picker3"
+
+        label = "Candle Pickers";
+    }
+
+    Poloniex [shape=box3d, color=blue4];
+
+}
+
