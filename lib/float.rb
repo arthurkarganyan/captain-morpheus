@@ -13,13 +13,13 @@ class Float
   end
 
   def pc
-    (self * 100).round(2).to_s + '%'
+   ("%0.2f" % (self * 100)) + '%'
   end
 
-  def traffic_light(green_limit, yellow_limit)
+  def traffic_light(green_limit, yellow_limit = nil)
     correctness_color = if self >= green_limit
                           :green
-                        elsif self >= yellow_limit
+                        elsif yellow_limit && self >= yellow_limit
                           :yellow
                         else
                           :red

@@ -4,8 +4,13 @@ task :c do
   binding.pry
 end
 
-task :refresh_data do
+task :lead_the_way do
+  c = Captain.new
 
+  loop do
+    c.lead_the_way!
+    sleep 60
+  end
 end
 
 task :magnus_test do

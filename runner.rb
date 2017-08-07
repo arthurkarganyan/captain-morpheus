@@ -1,8 +1,4 @@
-require 'telegram/bot'
-# require 'pry'
-
-require_relative "app/responder"
-
+require_relative 'load_config'
 
 Telegram::Bot::Client.run(config["bot_token"], logger: BOT_LOGGER, timeout: 3) do |bot|
   bot.logger.info('Bot has been started')

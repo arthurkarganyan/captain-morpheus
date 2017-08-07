@@ -117,9 +117,11 @@ class Leonardo # Da Vinci
   end
 
   def normalize_indicators(rsi12, trend12, trend24)
-    [rsi12,
-     trend12.to_sigmoid,
-     trend24.to_sigmoid]
+    self.class.normalize_indicators(rsi12, trend12, trend24)
+  end
+
+  def self.normalize_indicators(rsi12, trend12, trend24)
+    [rsi12, trend12.to_sigmoid, trend24.to_sigmoid]
   end
 
   def generate_buys(range)
