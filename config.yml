@@ -2,3 +2,9 @@ telegram_redis_db: 1
 captain_redis_db: 5
 telegram_log_path: 'log/bot.log'
 captain_log_path: 'log/captain.log'
+
+stop_trade_limit:
+  per_order: 0.05
+  avg_last_5: 0.01
+
+max_order_usd: 2
