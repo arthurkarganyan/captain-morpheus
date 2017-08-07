@@ -14,3 +14,5 @@ gem 'daemons', require: false
 gem 'telegram-bot-ruby'
 #gem 'time_difference'
 #gem 'oj'
+gem 'colorize'
+gem 'gnuplot'

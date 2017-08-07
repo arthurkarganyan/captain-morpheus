@@ -23,6 +23,7 @@ GEM
     coderay (1.1.1)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
+    colorize (0.8.1)
     concurrent-ruby (1.0.5)
     daemons (1.2.4)
     descendants_tracker (0.0.4)
@@ -33,6 +34,7 @@ GEM
     faraday (0.12.2)
       multipart-post (>= 1.2, < 3)
     ffi (1.9.18-x86-mingw32)
+    gnuplot (2.6.2)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
     httparty (0.14.0)
@@ -86,7 +88,9 @@ PLATFORMS
 
 DEPENDENCIES
   activesupport
+  colorize
   daemons
+  gnuplot
   httparty
   poloniex!
   pry

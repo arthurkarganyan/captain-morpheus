@@ -1,5 +1,9 @@
 class Captain
 
+  def lead_the_way!
+
+  end
+
   def period
     300
   end
