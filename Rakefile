@@ -28,10 +28,10 @@ task :magnus_test do
   # )
 end
 
-task :train_leonardo do
+task :train_leo do
   train_range = -3000..-2950
 
-  trained_leos = Array.new(20) do
+  trained_leos = Array.new(2) do
     Leonardo.new(train_range)
   end.select do |leo|
     trained_profit = leo.profit_on_range(train_range)
@@ -59,8 +59,6 @@ task :train_leonardo do
       winners << leo
     end
   end
-
-  # winners.
 
   winners.each do |leo|
     leo.compatative_profit = leo.profit_on_range(-10000..-1).first
