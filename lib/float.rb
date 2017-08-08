@@ -39,4 +39,8 @@ class Float
   def bid
     self / AFTER_FEE
   end
+
+  def usd
+    "#{"%0.2f" % self} USD"
+  end
 end

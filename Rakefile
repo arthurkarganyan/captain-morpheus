@@ -66,6 +66,24 @@ task :magnus_test do
   # )
 end
 
+def close_plot(range)
+  fast_plot(ask: ChartData.new(range)[:close].map { |i| (i.ask) },
+            bid: ChartData.new(range)[:close].map { |i| (i.bid) })
+end
+
+task :check_best do
+  leo = Leonardo.best
+
+  size = 600
+  start = -10000
+  # 4.times do
+  #   range = Range.new(start, start+=size)
+  #   profit = leo.profit_on_range(range)
+  # end
+  leo.profit_on_range(-10000..-8000)
+
+end
+
 task :train_leo do
   train_range = -3000..-2950
 

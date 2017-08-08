@@ -1,6 +1,6 @@
 class Captain
 
-  attr_accessor :last_action, :balance, :orders, :balance_usd, :balance_btc, :last_buy, :profit_sum
+  attr_accessor :last_action, :balance, :orders, :balance_usd, :balance_btc
 
   def initialize
     @balance_usd = 100.0
@@ -15,29 +15,14 @@ class Captain
   def lead_the_way!
     refresh_data!
 
-    output_buy = NetTrainer.forward_propagate(leo.buy_net, net_input)
-    output_sell = NetTrainer.forward_propagate(leo.sell_net, net_input)
+    buy_signal = NetTrainer.forward_propagate(leo.buy_net, net_input)
+    sell_signal = NetTrainer.forward_propagate(leo.sell_net, net_input)
 
-    # bookkeep(out)
+    book_keeper.handle!(sell_price, buy_signal, sell_signal)
+  end
 
-    str = "#{"%0.3f" % (sell_price*AFTER_FEE)} | #{"%0.3f" % (sell_price/AFTER_FEE)} | buy=#{output_buy.round(1)} | sell=#{output_sell.round(1)} | "
-    if output_buy.round == 1
-      if balance_usd > 0.0
-        logger.info(str + "Decided to buy")
-        buy!
-      else
-        logger.info(str + "Decided to buy but there is no USD")
-      end
-    elsif output_sell.round == 1
-      if balance_btc > 0.0
-        logger.info(str + "Decided to sell")
-        sell!
-      else
-        logger.info(str + "Decided to sell but there is no BTC")
-      end
-    else
-      logger.info(str + "Decided to hold")
-    end
+  def book_keeper
+    @book_keeper ||= Hermes.new(logger, balance_usd, balance_btc)
   end
 
   def net_input
