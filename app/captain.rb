@@ -5,6 +5,7 @@ class Captain
   def initialize
     @balance_usd = 100.0
     @profit_sum = @last_buy = @balance_btc = 0.0
+    fail if [:train, :production].exclude?(CONFIG[:mode])
   end
 
   def leo
@@ -14,7 +15,6 @@ class Captain
   def lead_the_way!
     refresh_data!
 
-    # TODO round remove?
     output_buy = NetTrainer.forward_propagate(leo.buy_net, net_input)
     output_sell = NetTrainer.forward_propagate(leo.sell_net, net_input)
 
@@ -39,16 +39,26 @@ class Captain
   end
 
   def net_input
-    Leonardo.normalize_indicators(
-      redis.lrange("#{pair}:#{period}:rsi12", -1, -1).first.to_f,
-      redis.lrange("#{pair}:#{period}:trend12", -1, -1).first.to_f,
-      redis.lrange("#{pair}:#{period}:trend24", -1, -1).first.to_f
-    )
+    Leonardo.normalize_indicators(*(INDICATORS.map do |key|
+      redis.lrange("#{pair}:#{period}:#{key}", -1, -1).first.to_f
+    end))
+  end
+
+  def mode
+    CONFIG[:mode]
+  end
+
+  def production?
+    CONFIG[:mode] == :production
+  end
+
+  def train?
+    CONFIG[:mode] == :train?
   end
 
   def logger
     @logger ||= begin
-      res = Logger.new(BASE_PATH + CONFIG[:captain_log_path])
+      res = Logger.new(BASE_PATH + CONFIG[:captain_log_path] + ".#{mode}")
 
       def res.info(msg)
         puts msg

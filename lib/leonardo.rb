@@ -74,16 +74,13 @@ class Leonardo # Da Vinci
     sell_inputs
   end
 
-  ITERATIONS = 30000
-  HIDDEN_NODES = 1
-
   def buy_net
     return @buy_net if @buy_net
 
     net_trainer = NetTrainer.new(buy_inputs)
+    net_trainer.iterations = NET_ITERATIONS
+    net_trainer.learning_rate = LEARNING_RATE
     net_trainer.num_hidden_nodes = HIDDEN_NODES
-    net_trainer.iterations = ITERATIONS
-    net_trainer.learning_rate = 0.05
 
     @buy_net ||= net_trainer.generate
   end
@@ -92,9 +89,9 @@ class Leonardo # Da Vinci
     return @sell_net if @sell_net
 
     net_trainer = NetTrainer.new(sell_inputs)
+    net_trainer.iterations = NET_ITERATIONS
     net_trainer.num_hidden_nodes = HIDDEN_NODES
-    net_trainer.iterations = ITERATIONS
-    net_trainer.learning_rate = 0.05
+    net_trainer.learning_rate = LEARNING_RATE
 
     @sell_net ||= net_trainer.generate
   end
@@ -110,8 +107,6 @@ class Leonardo # Da Vinci
   def self.normalize_indicators(rsi12, trend12, trend24, mavg12coef, mavg24coef)
     [rsi12, trend12.to_sigmoid, trend24.to_sigmoid, mavg12coef, mavg24coef]
   end
-
-  INDICATORS = [:rsi12, :trend12, :trend24, :mavg12coef, :mavg24coef]
 
   def generate_buys(range)
     chart_data = ChartData.new(range)

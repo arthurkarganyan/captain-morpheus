@@ -33,8 +33,6 @@ class NetTrainer
       sum += weights[i] * input
     end
     sum
-  rescue
-    binding.pry
   end
 
   def self.transfer(activation)
@@ -184,15 +182,15 @@ class NetTrainer
   end
 
   def learning_rate
-    @learning_rate ||= 0.3
+    @learning_rate
   end
 
   def num_hidden_nodes
-    @num_hidden_nodes ||= 1
+    @num_hidden_nodes
   end
 
   def iterations
-    @iterations ||= 1000
+    @iterations
   end
 
   def inputs

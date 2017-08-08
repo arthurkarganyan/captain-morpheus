@@ -28,5 +28,10 @@ BOT_LOGGER = Logger.new(BASE_PATH + CONFIG[:telegram_log_path])
 
 SECRETS_HASH = CONFIG["secrets"]
 
-INDICATORS = %w(rsi12 trend12 trend24)
 AFTER_FEE = 1-0.0025
+INDICATORS = [:rsi12, :trend12, :trend24, :mavg12coef, :mavg24coef]
+LEARNING_RATE = 0.05
+NET_ITERATIONS = 10000
+HIDDEN_NODES = 3
+
+
