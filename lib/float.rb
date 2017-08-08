@@ -31,4 +31,12 @@ class Float
   def to_sigmoid
     1/(1+2.718281828459045**(-self))
   end
+
+  def ask
+    self * AFTER_FEE
+  end
+
+  def bid
+    self / AFTER_FEE
+  end
 end

@@ -13,6 +13,18 @@ task :lead_the_way do
   end
 end
 
+task :zhdun_graph do
+
+end
+
+task :zhdun do
+  100.times do |i|
+    z = Zhdun.new(-20000..-1, i*0.001);
+    z.normalized_distances;
+    p [z.profit.avg, z.normalized_distances.avg, z.normalized_distances.median]
+  end
+end
+
 task :mavg do
   redis = Redis.new(db: CONFIG[:train_redis_db])
 

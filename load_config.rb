@@ -3,9 +3,12 @@ require 'bundler'
 Bundler.require(:default)
 require 'active_support/all'
 
-require_relative 'lib/float'
 require_relative 'app/captain'
 require_relative 'app/responder'
+require_relative 'app/zhdun'
+
+require_relative 'lib/float'
+require_relative 'lib/array'
 require_relative 'lib/chart_data'
 require_relative 'lib/competitor'
 require_relative 'lib/magnus'

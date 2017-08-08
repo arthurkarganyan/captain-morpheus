@@ -18,6 +18,8 @@ class Captain
     output_buy = NetTrainer.forward_propagate(leo.buy_net, net_input)
     output_sell = NetTrainer.forward_propagate(leo.sell_net, net_input)
 
+    # bookkeep(out)
+
     str = "#{"%0.3f" % (sell_price*AFTER_FEE)} | #{"%0.3f" % (sell_price/AFTER_FEE)} | buy=#{output_buy.round(1)} | sell=#{output_sell.round(1)} | "
     if output_buy.round == 1
       if balance_usd > 0.0
@@ -77,7 +79,7 @@ class Captain
     self.balance_usd = 0.0
 
     self.last_action = :buy
-    `cvlc ~/Dropbox/Sounds/beep18.mp3 --play-and-exit`
+    notifier && notifier.notify!
   end
 
   def sell!
@@ -89,7 +91,7 @@ class Captain
     self.last_buy = 0.0
 
     self.last_action = :sell
-    `cvlc ~/Dropbox/Sounds/beep18.mp3 --play-and-exit`
+    notifier && notifier.notify!
   end
 
   def period
