@@ -33,6 +33,8 @@ class NetTrainer
       sum += weights[i] * input
     end
     sum
+  rescue
+    binding.pry
   end
 
   def self.transfer(activation)
@@ -99,16 +101,22 @@ class NetTrainer
     end
   end
 
+  def correct_output?(output, expected)
+    expected.is_a?(Range) && expected.include?(output.round) || output.round == expected
+  end
+
   def train_network(network, domain, iterations, learning_rate)
     correct = 0
     last_correctness_pc = 0.0
     last_correctness_pc_count = 0
+    correctness_pc = 0.0
     iterations.times do |epoch|
       domain.each do |pattern|
         vector = pattern.first
         expected = pattern.last
         output = self.class.forward_propagate(network, vector)
-        correct += 1 if output.round == expected
+        correct += 1 if correct_output?(output, expected)
+        expected = 0 if expected == (0...0.5)
         backward_propagate_error(network, expected)
         calculate_error_derivatives_for_weights(network, vector)
       end
@@ -120,7 +128,7 @@ class NetTrainer
         # puts "> epoch=#{epoch + 1}, Correct=#{correct}/#{100 * domain.size} #{correctness_pc_str}"
         print "#{correctness_pc_str} "
 
-        return if correctness_pc == 1.0
+        return correctness_pc if correctness_pc == 1.0
         if correctness_pc == last_correctness_pc
           last_correctness_pc_count += 1
         else
@@ -128,11 +136,12 @@ class NetTrainer
           last_correctness_pc_count = 0
           last_correctness_pc = correctness_pc
         end
-        return if last_correctness_pc_count == 15 && correctness_pc > 0.95
+        return correctness_pc if last_correctness_pc_count == 10 && correctness_pc > 0.95
 
         correct = 0
       end
     end
+    correctness_pc
   end
 
   def test_network(network, domain)
@@ -140,7 +149,7 @@ class NetTrainer
     domain.each do |pattern|
       input_vector = pattern.first
       output = self.class.forward_propagate(network, input_vector)
-      correct += 1 if output.round == pattern.last
+      correct += 1 if correct_output?(output, pattern.last)
     end
     puts "\nFinished test with a score of #{correct}/#{domain.length}: #{(correct.to_f/domain.length).pc}"
     correct
@@ -153,11 +162,17 @@ class NetTrainer
   end
 
   def execute(domain, iterations, num_nodes, learning_rate)
-    network = []
-    network << Array.new(num_nodes) { create_neuron(inputs) }
-    network << Array.new(1) { create_neuron(network.last.size) }
-    puts "Topology: #{inputs} #{network.inject('') { |m, i| m + "#{i.size} " }}"
-    train_network(network, domain, iterations, learning_rate)
+    network = nil
+    loop do
+      num_nodes = [3,4].sample
+      network = []
+      network << Array.new(num_nodes) { create_neuron(inputs) }
+      # network << Array.new(num_nodes) { create_neuron(inputs) } if rand(2) % 2 == 0
+      network << Array.new(1) { create_neuron(network.last.size) }
+      puts "Topology: #{inputs} #{network.inject('') { |m, i| m + "#{i.size} " }}"
+      break if train_network(network, domain, iterations, learning_rate) > 0.95
+      puts "Training failed. Retraining!"
+    end
     test_network(network, domain)
     network
   end

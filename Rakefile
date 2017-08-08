@@ -13,6 +13,27 @@ task :lead_the_way do
   end
 end
 
+task :mavg do
+  redis = Redis.new(db: CONFIG[:train_redis_db])
+
+  redis.del("USDT_BTC:300:mavg12coef")
+  redis.del("USDT_BTC:300:mavg24coef")
+
+  close_ary = redis.lrange("USDT_BTC:300:close", 0, -1).map(&:to_f)
+  mavg12_ary = redis.lrange("USDT_BTC:300:movingavg12", 0, -1).map(&:to_f)
+  mavg24_ary = redis.lrange("USDT_BTC:300:movingavg24", 0, -1).map(&:to_f)
+
+  mavg12coef = []
+  mavg24coef = []
+  (close_ary.size-1).times do |i|
+    mavg12coef << (close_ary[i] / mavg12_ary[i]) - 1
+    mavg24coef << (close_ary[i] / mavg24_ary[i]) - 1
+  end
+
+  redis.lpush("USDT_BTC:300:mavg12coef", mavg12coef)
+  redis.lpush("USDT_BTC:300:mavg24coef", mavg24coef)
+end
+
 task :magnus_test do
   n = Magnus.new($chart_data.specific(*INDICATORS))
   best = n.find_best!
@@ -36,7 +57,7 @@ end
 task :train_leo do
   train_range = -3000..-2950
 
-  trained_leos = Array.new(2) do
+  trained_leos = Array.new(10) do
     Leonardo.new(train_range)
   end.select do |leo|
     trained_profit = leo.profit_on_range(train_range)
@@ -44,10 +65,12 @@ task :train_leo do
     leo.initial_possibility_used > 0.3
   end
 
-  size = 50
+  trained_leos[0].profit_on_range(-10000..-1).first
+
+  size = 100
   winners = []
 
-  INTERVALS = 30
+  INTERVALS = 20
   trained_leos.each do |leo|
     possibilities = []
     start = -2950

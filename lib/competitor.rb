@@ -21,13 +21,21 @@ module Competitor
     last_buy = 0.0
     sum_profit = 0.0
 
-    close_prices.size.times do |i|
-      if buys[i] == 1 && sells[i] == 0 && balance_usd > 0.0
+    locker = nil
+
+    (close_prices.size-1).times do |i|
+      # if locker && (locker.first > close_prices[i] || locker.last < close_prices[i])
+      #   locker = nil
+      # end
+
+      # p [buys[i], sells[i]]
+      if buys[i] > 0.7 && sells[i] < (0.3) && balance_usd > 0.0
         last_buy = balance_usd
         balance_btc = (balance_usd * AFTER_FEE) / close_prices[i]
         balance_usd = 0.0
+        locker = [close_prices[i]*AFTER_FEE, close_prices[i]/AFTER_FEE]
         puts "#{i}, buy=#{(close_prices[i]/AFTER_FEE).round(1)} #{balance_usd.round(2)}, #{balance_btc.round(5)}"
-      elsif buys[i] == 0 && sells[i] == 1 && balance_btc > 0.0
+      elsif buys[i] < 0.3 && sells[i] > 0.7 && balance_btc > 0.0 && locker && (locker.first > close_prices[i] || locker.last < close_prices[i])
         balance_usd = (balance_btc / AFTER_FEE) * close_prices[i]
         profit = balance_usd - last_buy
         sum_profit += profit

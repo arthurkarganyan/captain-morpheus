@@ -11,33 +11,32 @@ class Leonardo # Da Vinci
   end
 
   def vector_for_index(i)
-    normalize_indicators(*[rsi12_ary[i], trend12_ary[i], trend24_ary[i]])
+    normalize_indicators(*(INDICATORS.map {|indicator| chart_data[indicator][i]}))
   end
 
   def buy_inputs
     buy_inputs = []
 
-    fail("fuck!") if [rsi12_ary.size, trend12_ary.size, trend24_ary.size].uniq.size != 1
+    # fail("fuck!") if [(@rsi12_ary ||= chart_data[:rsi12]).size, (@trend12_ary ||= chart_data[:trend12]).size, (@trend24_ary ||= chart_data[:trend24]).size].uniq.size != 1
 
     train_range.size.times do |i|
       if ideal_buys.first.include?(i)
         buy_inputs << [vector_for_index(i), 1]
-        buy_inputs << [vector_for_index(i), 1]
-        buy_inputs << [vector_for_index(i), 1]
       elsif ideal_sells.first.include?(i)
         buy_inputs << [vector_for_index(i), 0]
-        buy_inputs << [vector_for_index(i), 0]
+      else
+        buy_inputs << [vector_for_index(i), 0...0.5]
       end
     end
 
     # buy_inputs << [vector_for_index(25), 0]
 
-    (ideal_buys.first.size * 2).times do
-      i = rand(train_range.size)
-      unless ideal_buys.first.include?(i)
-        buy_inputs << [vector_for_index(i), 0]
-      end
-    end
+    # (ideal_buys.first.size * 2).times do
+    #   i = rand(train_range.size)
+    #   unless ideal_buys.first.include?(i)
+    #     buy_inputs << [vector_for_index(i), 0...0.5]
+    #   end
+    # end
 
     buy_inputs
   end
@@ -48,11 +47,10 @@ class Leonardo # Da Vinci
     train_range.size.times do |i|
       if ideal_sells.first.include?(i)
         sell_inputs << [vector_for_index(i), 1]
-        sell_inputs << [vector_for_index(i), 1]
-        sell_inputs << [vector_for_index(i), 1]
       elsif ideal_buys.first.include?(i)
         sell_inputs << [vector_for_index(i), 0]
-        sell_inputs << [vector_for_index(i), 0]
+      else
+        sell_inputs << [vector_for_index(i), 0...0.5]
       end
     end
 
@@ -66,23 +64,24 @@ class Leonardo # Da Vinci
     #   sell_inputs <<[vector_for_index(local_mins[i].first), 0]
     # end
 
-    (ideal_sells.first.size * 2).times do
-      i = rand(train_range.size)
-      unless ideal_sells.first.include?(i)
-        sell_inputs << [vector_for_index(i), 0]
-      end
-    end
+    # (ideal_sells.first.size * 2).times do
+    #   i = rand(train_range.size)
+    #   unless ideal_sells.first.include?(i)
+    #     sell_inputs << [vector_for_index(i), 0...0.5]
+    #   end
+    # end
 
     sell_inputs
   end
 
-  ITERATIONS = 15000
+  ITERATIONS = 30000
+  HIDDEN_NODES = 1
 
   def buy_net
     return @buy_net if @buy_net
 
     net_trainer = NetTrainer.new(buy_inputs)
-    net_trainer.num_hidden_nodes = 5
+    net_trainer.num_hidden_nodes = HIDDEN_NODES
     net_trainer.iterations = ITERATIONS
     net_trainer.learning_rate = 0.05
 
@@ -93,7 +92,7 @@ class Leonardo # Da Vinci
     return @sell_net if @sell_net
 
     net_trainer = NetTrainer.new(sell_inputs)
-    net_trainer.num_hidden_nodes = 6
+    net_trainer.num_hidden_nodes = HIDDEN_NODES
     net_trainer.iterations = ITERATIONS
     net_trainer.learning_rate = 0.05
 
@@ -104,25 +103,15 @@ class Leonardo # Da Vinci
     @chart_data ||= ChartData.new(train_range)
   end
 
-  def rsi12_ary
-    @rsi12_ary ||= chart_data[:rsi12]
+  def normalize_indicators(*ary)
+    self.class.normalize_indicators(*ary)
   end
 
-  def trend12_ary
-    @trend12_ary ||= chart_data[:trend12]
+  def self.normalize_indicators(rsi12, trend12, trend24, mavg12coef, mavg24coef)
+    [rsi12, trend12.to_sigmoid, trend24.to_sigmoid, mavg12coef, mavg24coef]
   end
 
-  def trend24_ary
-    @trend24_ary ||= chart_data[:trend24]
-  end
-
-  def normalize_indicators(rsi12, trend12, trend24)
-    self.class.normalize_indicators(rsi12, trend12, trend24)
-  end
-
-  def self.normalize_indicators(rsi12, trend12, trend24)
-    [rsi12, trend12.to_sigmoid, trend24.to_sigmoid]
-  end
+  INDICATORS = [:rsi12, :trend12, :trend24, :mavg12coef, :mavg24coef]
 
   def generate_buys(range)
     chart_data = ChartData.new(range)
@@ -130,13 +119,13 @@ class Leonardo # Da Vinci
     test_input = []
 
     (range.size - 1).times do |i|
-      test_input << normalize_indicators(*([:rsi12, :trend12, :trend24].map { |j| chart_data[j][i] }))
+      test_input << normalize_indicators(*(INDICATORS.map { |j| chart_data[j][i] }))
     end
 
     output_buy = []
 
     test_input.each do |pattern|
-      output_buy << NetTrainer.forward_propagate(buy_net, pattern).round
+      output_buy << NetTrainer.forward_propagate(buy_net, pattern)
     end
 
     output_buy
@@ -147,15 +136,14 @@ class Leonardo # Da Vinci
 
     test_input = []
 
-    # FIXME CHART DATA IS NOT UNIOFORM WITH VECTORO_FOR_INDEX
     (range.size - 1).times do |i|
-      test_input << normalize_indicators(*([:rsi12, :trend12, :trend24].map { |j| chart_data[j][i] }))
+      test_input << normalize_indicators(*(INDICATORS.map { |j| chart_data[j][i] }))
     end
 
     output_sell = []
 
     test_input.each do |pattern|
-      output_sell << NetTrainer.forward_propagate(sell_net, pattern).round
+      output_sell << NetTrainer.forward_propagate(sell_net, pattern)
     end
     output_sell
   end
