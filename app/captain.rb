@@ -5,30 +5,43 @@ class Captain
   def initialize
     @balance_usd = 100.0
     @profit_sum = @last_buy = @balance_btc = 0.0
-    fail if [:train, :production].exclude?(CONFIG[:mode])
-  end
-
-  def leo
-    @leo ||= Leonardo.best
+    hermes.buy!(3237)
+    fail if [:train, :production].exclude?(CONFIG[:mode].to_sym)
+    @maxx = nil
   end
 
   def lead_the_way!
+    if hermes.last_buy_price.nil? || hermes.last_buy_price == 0
+      logger.info("No last_buy_price detected")
+      return
+    end
+
     refresh_data!
 
-    buy_signal = NetTrainer.forward_propagate(leo.buy_net, net_input)
-    sell_signal = NetTrainer.forward_propagate(leo.sell_net, net_input)
+    if hermes.balance_btc > 0
+      @maxx = [sell_price, (@maxx || 0), hermes.last_buy_price].max
+    else
+      @maxx = 0.0
+    end
 
-    book_keeper.handle!(sell_price, buy_signal, sell_signal)
+    logger.info("last_buy_price=#{"%0.1f" % hermes.last_buy_price} current_price=#{"%0.1f" % sell_price} maxx_threshold=#{"%0.1f" % maxx_threshold}")
+
+    if hermes.balance_btc > 0 && sell_price < maxx_threshold
+      hermes.sell!(sell_price)
+      @maxx = 0.0
+    end
   end
 
-  def book_keeper
-    @book_keeper ||= Hermes.new(logger, balance_usd, balance_btc)
+  def maxx_threshold
+    @maxx && @maxx * thresh_koef
   end
 
-  def net_input
-    Leonardo.normalize_indicators(*(INDICATORS.map do |key|
-      redis.lrange("#{pair}:#{period}:#{key}", -1, -1).first.to_f
-    end))
+  def thresh_koef
+    CONFIG[:thresh_koef]
+  end
+
+  def hermes
+    @hermes ||= Hermes.new(logger, balance_usd, balance_btc)
   end
 
   def mode
@@ -54,29 +67,6 @@ class Captain
 
       res
     end
-  end
-
-  def buy!
-    self.last_buy = balance_usd
-
-    self.balance_btc = AFTER_FEE*(balance_usd / sell_price)
-    logger.info("Buy:  got #{balance_btc} for #{sell_price/AFTER_FEE} | #{balance_usd} USD Disappeared")
-    self.balance_usd = 0.0
-
-    self.last_action = :buy
-    notifier && notifier.notify!
-  end
-
-  def sell!
-    self.balance_usd = AFTER_FEE*(balance_btc * sell_price)
-    profit = (balance_usd - last_buy)
-    self.profit_sum += profit
-    logger.info("Sell: got #{balance_usd} for #{sell_price*AFTER_FEE} | #{balance_btc} BTC Disappeared | Profit = #{profit.traffic_light(last_buy)} | Profit sum = #{profit_sum.traffic_light(0.0)}")
-    self.balance_btc = 0.0
-    self.last_buy = 0.0
-
-    self.last_action = :sell
-    notifier && notifier.notify!
   end
 
   def period

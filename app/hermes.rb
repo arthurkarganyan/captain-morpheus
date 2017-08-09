@@ -2,7 +2,7 @@ class Hermes
   attr_reader :logger, :sell_price, :notifier
   attr_accessor :balance_usd, :balance_btc, :last_buy_usd, :profit_sum, :last_buy_price
 
-  def initialize(logger, balance_usd, balance_btc, notifier = nil, current_range)
+  def initialize(logger, balance_usd, balance_btc, notifier = nil, current_range = nil)
     @logger = logger
     @balance_usd = balance_usd
     @balance_btc = balance_btc

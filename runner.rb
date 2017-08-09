@@ -1,5 +1,7 @@
 require_relative 'load_config'
 
+require 'telegram/bot'
+
 Telegram::Bot::Client.run(config["bot_token"], logger: BOT_LOGGER, timeout: 3) do |bot|
   bot.logger.info('Bot has been started')
   loop do
