@@ -4,7 +4,7 @@ task :c do
   binding.pry
 end
 
-task :stop_moose do
+task :moose do
   range = -1200..-1
   close_prices = ChartData.new(range)[:close]
   # ideal_buys = Rockefeller.ideal_buys_and_sells(close_prices).first
