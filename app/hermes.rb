@@ -16,6 +16,10 @@ class Hermes
   # my_data = Indicators::Data.new chart_data.map {|i| i["close"]}
   # rsi_indexes = my_data.calc(type: :rsi, params: 28).output
 
+  def new_handle!
+    yield
+  end
+
   RSI = 30
 
   def handle!(sell_price, buy_signal, sell_signal, current_iteration)
@@ -87,6 +91,7 @@ class Hermes
   end
 
   def buy!(sell_price)
+    return unless balance_usd > 0
     self.last_buy_usd = balance_usd
     self.last_buy_price = sell_price/AFTER_FEE
     self.balance_btc = AFTER_FEE*(balance_usd / sell_price)
@@ -95,7 +100,8 @@ class Hermes
   end
 
   def sell!(sell_price)
-    fail("Stop-trade") if profit(sell_price) < 0.0 && balance_usd*0.001 < -profit(sell_price)
+    return unless balance_btc > 0
+    # fail("Stop-trade") if profit(sell_price) < 0.0 && balance_usd*0.001 < -profit(sell_price)
     self.balance_usd = AFTER_FEE*(balance_btc * sell_price)
     self.profit_sum += profit(sell_price)
     logger.info("Sell: got #{"%0.1f" % balance_usd} USD for #{"%0.1f" % (sell_price*AFTER_FEE)} | -#{"%0.5f" % balance_btc} BTC | Profit=#{profit(sell_price).round(1).traffic_light(0.0)} | Sum=#{profit_sum.round(1).traffic_light(0.0)}")

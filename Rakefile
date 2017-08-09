@@ -4,6 +4,40 @@ task :c do
   binding.pry
 end
 
+task :stop_moose do
+  range = -1200..-1
+  close_prices = ChartData.new(range)[:close]
+  # ideal_buys = Rockefeller.ideal_buys_and_sells(close_prices).first
+
+  # if balance_btc > 0.0
+  #   if profit(sell_price) > (last_buy_usd*0.001)
+  #     logger.info(str + "Decided to sell")
+  #     sell!(sell_price)
+  #     notifier && notifier.notify!
+  #   else
+  #     logger.info(str + "Decided to sell but profit=#{profit(sell_price).round(2)}")
+  #   end
+  # else
+  #   logger.info(str + "Decided to sell but there is no BTC")
+  # end
+
+
+  balance_usd = 100.0
+  balance_btc = 0.0
+
+  ary = []
+  # 1000.times do |i|
+    # k = 0.99+rand(0..1.0)/10.0
+    k =0.985
+    profit = Moose.new.profit_on_range(range, true, k).first
+    ary << [k, profit]
+  # end
+
+  p ary.sort_by{|i| i.last}
+
+
+end
+
 task :long do
   range = -365..-1
   chart_data = ChartData.new(range, 1.day)
@@ -14,20 +48,6 @@ task :long do
   # set boxwidth 0.2
   # plot 'candlesticks.dat' using 1:(int($0)%3?$3:$5):2:6:(int($0)%3?$5:$3) with candlesticks title "open < close", \
   # NaN with boxes lt 1 fs solid 1 title "close < open"
-
-  ary = [
-    ['2014-01-01 17:00:00', 1.376150, 1.376550, 1.374020, 1.375990],
-    ['2014-01-01 18:00:00', 1.376100, 1.377340, 1.375980, 1.376520],
-    ['2014-01-01 19:00:00', 1.376440, 1.376870, 1.375780, 1.375860],
-    ['2014-01-01 20:00:00', 1.375850, 1.376470, 1.375000, 1.376280],
-    ['2014-01-01 21:00:00', 1.376270, 1.376720, 1.375970, 1.376530],
-    ['2014-01-01 22:00:00', 1.376550, 1.377440, 1.376270, 1.376530],
-    ['2014-01-01 23:00:00', 1.376540, 1.376540, 1.374390, 1.374520],
-    ['2014-01-02 00:00:00', 1.374500, 1.375790, 1.374380, 1.375660],
-    ['2014-01-02 01:00:00', 1.375630, 1.375740, 1.374610, 1.375000],
-    ['2014-01-02 02:00:00', 1.374980, 1.375270, 1.372480, 1.373100]
-  ]
-
 
   # set xdata time
   # set timefmt"%Y-%m-%d %H:%M:%S"
@@ -74,7 +94,6 @@ task :long do
   # 4 - low
   # open, high, low, close
   `gnuplot -p -e "#{cmds.split("\n").join(";")}"`
-
 
 
   # Gnuplot.open do |gp|

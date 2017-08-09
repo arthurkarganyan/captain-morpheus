@@ -5,6 +5,7 @@ require 'active_support/all'
 
 require_relative 'app/captain'
 require_relative 'app/candle_picker'
+require_relative 'app/moose'
 require_relative 'app/responder'
 require_relative 'app/zhdun'
 require_relative 'app/hermes'
