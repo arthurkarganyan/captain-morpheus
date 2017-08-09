@@ -43,4 +43,8 @@ class Float
   def usd
     "#{"%0.2f" % self} USD"
   end
+
+  def lg
+    Math.log(self)
+  end
 end

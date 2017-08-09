@@ -1,15 +1,12 @@
-PAIR = "USDT_BTC"
-
-PERIOD = 300 # 5 minutes
-START_USD = 100.0
-
 class ChartData
-  attr_reader :range
+  attr_reader :range, :period, :pair
 
-  def initialize(range)
+  def initialize(range, period = 300, pair = "USDT_BTC")
     @range = range
+    @period = period
+    @pair = pair
 
-    secs = size*PERIOD
+    secs = size*period
     hours = secs/3600.0
     days = secs/(24*3600.0)
     months = secs/(30*24*3600.0)
@@ -28,7 +25,7 @@ class ChartData
   end
 
   def all_size
-    @all_size ||= redis.llen("#{PAIR}:#{PERIOD}:close")
+    @all_size ||= redis.llen("#{pair}:#{period}:close")
   end
 
   def ary
@@ -47,7 +44,7 @@ class ChartData
   end
 
   def construct_key(key)
-    "#{PAIR}:#{PERIOD}:#{key}"
+    "#{pair}:#{period}:#{key}"
   end
 
   def dates
