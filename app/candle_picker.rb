@@ -126,9 +126,8 @@ class CandlePicker
       # end
       to_add = []
       h.each do |elem|
-        to_add << transform_values(elem.values)
-        #
-        # csv << v
+        # to_add << transform_values(elem.values)
+        csv << transform_values(elem.values)
       end
 
       # 0 date
@@ -139,25 +138,25 @@ class CandlePicker
       # to_add_new = []
       # last = nil
 
-      high, low, open, close = to_add[0][1], to_add[0][2], to_add[0][3], to_add[0][4]
-      last_date = to_add[0]
-      green = to_add[0][4] > to_add[0][3]
-
-      1.upto(to_add.size) do |i|
-        if to_add.size == i || (green != (to_add[i][4] > to_add[i][3]))
-          csv << [last_date, high, low, open, close]
-          if to_add[i]
-            last_date, high, low, open, close = to_add[i][0], to_add[i][1], to_add[i][2], to_add[i][3], to_add[i][4]
-            green = to_add[i][4] > to_add[i][3]
-          end
-        else
-          high = [to_add[i][1], high].max
-          low = [to_add[i][2], low].min
-          open = [to_add[i][3], open].send(green ? :min : :max)
-          close = [to_add[i][4], close].send(green ? :max : :min)
-          last_date = to_add[i][0]
-        end
-      end
+      # high, low, open, close = to_add[0][1], to_add[0][2], to_add[0][3], to_add[0][4]
+      # last_date = to_add[0]
+      # green = to_add[0][4] > to_add[0][3]
+      #
+      # 1.upto(to_add.size) do |i|
+      #   if to_add.size == i || (green != (to_add[i][4] > to_add[i][3]))
+      #     csv << [last_date, high, low, open, close]
+      #     if to_add[i]
+      #       last_date, high, low, open, close = to_add[i][0], to_add[i][1], to_add[i][2], to_add[i][3], to_add[i][4]
+      #       green = to_add[i][4] > to_add[i][3]
+      #     end
+      #   else
+      #     high = [to_add[i][1], high].max
+      #     low = [to_add[i][2], low].min
+      #     open = [to_add[i][3], open].send(green ? :min : :max)
+      #     close = [to_add[i][4], close].send(green ? :max : :min)
+      #     last_date = to_add[i][0]
+      #   end
+      # end
     end
   end
 end

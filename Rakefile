@@ -48,6 +48,8 @@ task :long do
 
   cmds = <<-HEREDOC
   set title '#{pair}'
+  set terminal png
+  set output 'file.png'
   set xdata time
   set timefmt'%Y-%m-%d'
   set datafile separator ','
