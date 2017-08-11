@@ -12,3 +12,18 @@ def fast_plot(hash)
     end
   end
 end
+
+def data_set(data, title, with)
+  Gnuplot::DataSet.new(data) do |ds|
+    ds.with = with.to_s
+    ds.title = title.to_s
+  end
+end
+
+def data_plot(ary)
+  Gnuplot.open do |gp|
+    Gnuplot::Plot.new(gp) do |plot|
+      plot.data = ary.map { |i| data_set(i.first, i[1], i[2]) }
+    end
+  end
+end
