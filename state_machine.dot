@@ -1,0 +1,13 @@
+digraph {
+    "Maximum Searching" -> "Buy Lock"[label="sell!"]
+    "Buy Lock" -> "Minimum Searching" [label="unlock!"]
+    "Minimum Searching" -> "Profit Point Waiting"  [label="buy!"]
+    "Profit Point Waiting" -> "Maximum Searching" [label="reached_profit_point!"]
+    "Profit Point Waiting" -> "Buy Lock" [label="emergency_sell!"]
+
+    "Maximum Searching" [shape=box3d, color=green];
+    "Minimum Searching" [shape=box3d, color=red];
+    "Buy Lock" [shape=box, color=blue4];
+    "Profit Point Waiting" [shape=box, color=purple];
+}
+
