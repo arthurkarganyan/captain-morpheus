@@ -10,28 +10,30 @@ class TradeMachine
 
   STATES = TRANSITIONS.keys
 
-  attr_reader :current_state, :hermes, :pair
+  attr_reader :state, :hermes, :pair
 
   attr_accessor :orders
 
   STATES.each do |state|
     define_method(state) do
-      state == @current_state
+      state == @state
     end
   end
 
   def initialize(pair)
-    @current_state = INITIAL_STATE
-    @hermes = NewHermes.new(logger, 100.0, 0.0)
     @pair = pair
+    @state = load_state
+    @hermes = NewHermes.new(logger, 100.0, 0.0)
     @maxx = @minn = nil
+
+    logger.info("created with state: #{state_color(@state)}")
   end
 
   def transit(to_state, action)
     to_state, action = to_state.to_sym, action.to_sym
     fail("Unknown state #{to_state}") unless STATES.include?(to_state)
     transition_found = false
-    TRANSITIONS[current_state].each do |k, v|
+    TRANSITIONS[state].each do |k, v|
       if v == to_state && k == action
         transition_found = true
         break
@@ -39,14 +41,23 @@ class TradeMachine
     end
 
     unless transition_found
-      fail("Transition not found: #{current_state} -> #{to_state} by method '#{action}'")
+      fail("Transition not found: #{state} -> #{to_state} by method '#{action}'")
     end
 
     fail("'#{action}' not implemented") unless respond_to?(action, true)
 
     send(action)
-    telegram_msg("Changed state from #{state_color(current_state)} -> #{state_color(to_state)}")
-    @current_state = to_state
+    telegram_msg("Changed state from #{state_color(state)} -> #{state_color(to_state)}")
+    @state = to_state
+    redis.setex(redis_state_key, 1.hour.to_i, to_state) if mode == :production
+  end
+
+  def redis_state_key
+    "trade_machine:#{pair}:state"
+  end
+
+  def load_state
+    (redis.get(redis_state_key) || INITIAL_STATE).to_sym
   end
 
   def telegram_msg(msg)
@@ -54,7 +65,7 @@ class TradeMachine
   end
 
   def mode
-    CONFIG[:mode]
+    CONFIG[:mode].to_sym
   end
 
   def logger
@@ -74,9 +85,9 @@ class TradeMachine
 
   def run!
     refresh_data!
-    send("handle_#{current_state}")
+    send("handle_#{state}")
 
-    TRANSITIONS[current_state].each do |k, v|
+    TRANSITIONS[state].each do |k, v|
       return transit(v, k) if send("check_#{k.to_s.sub('!', '?')}")
     end
 
@@ -156,7 +167,7 @@ class TradeMachine
 
   def log(msg)
     return
-    general_msg = "#{state_color(current_state)} | "
+    general_msg = "#{state_color(state)} | "
     general_msg << "current_price=#{"%0.1f" % sell_price} "
     general_msg << "rsi=#{"%0.1f" % current_rsi}"
     logger.info("#{general_msg} #{msg}")

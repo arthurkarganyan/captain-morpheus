@@ -13,6 +13,7 @@ require_relative 'app/new_hermes'
 require_relative 'app/trade_machine'
 require_relative 'app/candle'
 require_relative 'app/fake_poloniex'
+require_relative 'app/changer'
 
 require_relative 'lib/float'
 require_relative 'lib/array'
