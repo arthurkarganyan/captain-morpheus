@@ -8,12 +8,13 @@ require_relative 'app/candle_picker'
 require_relative 'app/moose'
 require_relative 'app/responder'
 require_relative 'app/zhdun'
-require_relative 'app/hermes'
 require_relative 'app/new_hermes'
 require_relative 'app/trade_machine'
 require_relative 'app/candle'
 require_relative 'app/fake_poloniex'
 require_relative 'app/changer'
+require_relative 'app/main_loop'
+require_relative 'app/balances'
 
 require_relative 'lib/float'
 require_relative 'lib/array'
@@ -36,6 +37,11 @@ end
 $redis = Redis.new(db: CONFIG[:telegram_redis_db])
 
 BOT_LOGGER = Logger.new(BASE_PATH + CONFIG[:telegram_log_path])
+
+def BOT_LOGGER.info(msg)
+  puts msg
+  super
+end
 
 SECRETS_HASH = CONFIG["secrets"]
 

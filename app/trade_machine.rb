@@ -2,15 +2,17 @@ class TradeMachine
   INITIAL_STATE = :buy_lock
   TRANSITIONS = {
     maximum_searching: {sell!: :buy_lock},
-    buy_lock: {unlock!: :minimum_searching},
-    minimum_searching: {buy!: :profit_point_waiting},
+    buy_lock: {unlock!: :minimum_searching,
+               manual_buy!: :profit_point_waiting},
+    minimum_searching: {buy!: :profit_point_waiting,
+                        manual_buy!: :profit_point_waiting},
     profit_point_waiting: {reached_profit_point!: :maximum_searching,
                            emergency_sell!: :buy_lock}
   }
 
   STATES = TRANSITIONS.keys
 
-  attr_reader :state, :hermes, :pair
+  attr_reader :state, :hermes, :pair, :telegram_options
 
   attr_accessor :orders
 
@@ -23,10 +25,13 @@ class TradeMachine
   def initialize(pair)
     @pair = pair
     @state = load_state
-    @hermes = NewHermes.new(logger, 100.0, 0.0)
+    @hermes = NewHermes.new(logger, pair, poloniex_client_clazz, redis)
     @maxx = @minn = nil
+    @telegram_options = []
 
-    logger.info("created with state: #{state_color(@state)}")
+    a = "[#{self.class}:#{pair}]"
+    logger.info("#{a} created with state: #{state_color(@state)}")
+    telegram_msg("#{a} created with state: #{@state}")
   end
 
   def transit(to_state, action)
@@ -47,9 +52,10 @@ class TradeMachine
     fail("'#{action}' not implemented") unless respond_to?(action, true)
 
     send(action)
-    telegram_msg("Changed state from #{state_color(state)} -> #{state_color(to_state)}")
+    logger.info("Changed state from #{state_color(state)} -> #{state_color(to_state)}")
+    telegram_msg("Changed state from #{state} -> #{to_state}")
     @state = to_state
-    redis.setex(redis_state_key, 1.hour.to_i, to_state) if mode == :production
+    redis.set(redis_state_key, to_state) if mode == :production
   end
 
   def redis_state_key
@@ -61,7 +67,7 @@ class TradeMachine
   end
 
   def telegram_msg(msg)
-    puts msg
+    Responder.current.reply(msg)
   end
 
   def mode
@@ -83,7 +89,31 @@ class TradeMachine
     end
   end
 
+  def last_msg
+    Responder.telegram_redis.lrange("received_msgs:#{Responder.current.chat_id}", -1, -1).first
+  end
+
+  def drop_last_msg
+    Responder.telegram_redis.lpop("received_msgs:#{Responder.current.chat_id}")
+  end
+
+  def handle_telegram
+    cmds = {
+      '/debug' => lambda { binding.pry },
+      '/lastbuy' => lambda { Responder.current.reply(hermes.last_buy_price.try(:round, 2) || "no last buy") },
+      '/state' => lambda { Responder.current.reply(state) },
+    }
+    return unless last_msg
+    return unless cmds[last_msg]
+
+    logger.info("Received cmd: #{last_msg}")
+    l = cmds[last_msg]
+    drop_last_msg
+    l.call
+  end
+
   def run!
+    handle_telegram
     refresh_data!
     send("handle_#{state}")
 
@@ -95,7 +125,7 @@ class TradeMachine
   end
 
   def sell!
-    hermes.sell!(sell_price)
+    telegram_msg("Selling: #{hermes.sell!(sell_price)}")
     @maxx = 0.0
     @stepted_out = nil
   end
@@ -109,8 +139,7 @@ class TradeMachine
   end
 
   def buy!
-    # p "sma: #{current_sma}"
-    hermes.buy!(sell_price)
+    telegram_msg("Buying: #{hermes.buy!(sell_price)}")
     @minn = nil
     @unlock_at = nil
     # sleep 1
@@ -149,11 +178,24 @@ class TradeMachine
     @minn && @minn / CONFIG[:minn_thresh_koef]
   end
 
+  def check_manual_buy?
+    return false unless hermes.balances["USDT"] > 1
+    last_msg = Responder.telegram_redis.lrange("received_msgs:#{Responder.current.chat_id}", -1, -1).first
+    return false unless last_msg
+    last_msg.downcase!
+    last_msg.start_with?("/buy") && last_msg[4..-1] == pair.split('_').last.downcase
+  end
+
+  def manual_buy!
+    Responder.telegram_redis.lpop("received_msgs:#{Responder.current.chat_id}")
+    buy!
+  end
+
   def reached_profit_point!
   end
 
   def handle_buy_lock
-
+    add_buy_button
   end
 
   def state_color(state)
@@ -173,10 +215,15 @@ class TradeMachine
     logger.info("#{general_msg} #{msg}")
   end
 
+  def add_buy_button
+    @telegram_options = ["/buy#{pair.split("_").last.downcase}"]
+  end
+
   def handle_minimum_searching
     @unlock_at += 1
     @minn = [sell_price, (@minn || 10**10)].min if (hermes.balance_usd > 0)
 
+    add_buy_button
     log("minn_threshold=#{"%0.1f" % minn_threshold}")
   end
 
@@ -223,6 +270,7 @@ class TradeMachine
   end
 
   def refresh_data!
+    hermes.clear_balances!
     clear_redis!
     fill_close_prices!
     # fill_indexes!

@@ -53,6 +53,15 @@ def prof(file_name = 'prof')
   res
 end
 
+# task :trade do
+#   trade_machine = TradeMachine.new("USDT_LTC")
+#
+#   loop do
+#     trade_machine.run!
+#     sleep 60
+#   end
+# end
+
 task :run_trade_machine do
   trade_machine = TradeMachine.new("USDT_BTC")
 

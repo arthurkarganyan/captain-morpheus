@@ -1,7 +1,7 @@
 telegram_redis_db: 1
 train_redis_db: 4
 captain_redis_db: 5
-telegram_log_path: 'log/bot.log'
+telegram_log_path: 'log/telegram_bot.log'
 captain_log_path: 'log/captain.log'
 
 stop_trade_limit:
