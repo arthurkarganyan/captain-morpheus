@@ -9,6 +9,10 @@ require_relative 'app/moose'
 require_relative 'app/responder'
 require_relative 'app/zhdun'
 require_relative 'app/hermes'
+require_relative 'app/new_hermes'
+require_relative 'app/trade_machine'
+require_relative 'app/candle'
+require_relative 'app/fake_poloniex'
 
 require_relative 'lib/float'
 require_relative 'lib/array'
@@ -25,7 +29,7 @@ BASE_PATH = File.expand_path(File.dirname(__FILE__)) + '/'
 CONFIG = YAML.load_file(BASE_PATH + 'config.yml')
 
 def CONFIG.[](key)
-  CONFIG.fetch(key.to_s) || fail("Key `#{key}` not found")
+  ENV[key.to_s] || CONFIG.fetch(key.to_s) || fail("Key `#{key}` not found")
 end
 
 $redis = Redis.new(db: CONFIG[:telegram_redis_db])

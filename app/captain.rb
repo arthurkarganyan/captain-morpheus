@@ -33,11 +33,11 @@ class Captain
   end
 
   def maxx_threshold
-    @maxx && @maxx * thresh_koef
+    @maxx && @maxx * CONFIG[:maxx_thresh_koef]
   end
 
-  def thresh_koef
-    CONFIG[:thresh_koef]
+  def minn_threshold
+    @minn && @minn * CONFIG[:minn_thresh_koef]
   end
 
   def hermes

@@ -9,5 +9,5 @@ stop_trade_limit:
   avg_last_5: 0.01
 
 max_order_usd: 2
-thresh_koef: 0.985
-mode: production
+maxx_thresh_koef: 0.97
+minn_thresh_koef: 0.98

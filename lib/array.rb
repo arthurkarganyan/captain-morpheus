@@ -16,4 +16,8 @@ class Array
     len = sorted.length
     (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
   end
+
+  def lg
+    map { |i| i && Math.log(i) || 0.0 }
+  end
 end

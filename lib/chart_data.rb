@@ -63,7 +63,9 @@ class ChartData
       return @specific[key] if @specific && @specific[key]
       @specific ||= {}
       time = Benchmark.measure do
-        @specific[key] = redis.lrange(construct_key(key), range.first, range.last).map(&:to_f)
+        tmp = redis.lrange(construct_key(key), range.first, range.last)
+        to = (key.to_sym == :date) ? :to_i : :to_f
+        @specific[key] = tmp.map(&to)
       end.real
       puts "Loaded #{key} for #{time.round(1)} sec" if time > 0.1
       @specific[key]

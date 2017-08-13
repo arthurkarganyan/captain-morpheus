@@ -17,5 +17,6 @@ gem 'telegram-bot-ruby'
 gem 'colorize'
 gem 'gnuplot'
 gem 'indicators', git: 'https://github.com/arthurkarganyan/indicators'
+gem 'ruby-prof'
 
 
