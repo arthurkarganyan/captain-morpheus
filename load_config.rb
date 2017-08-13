@@ -17,6 +17,7 @@ require_relative 'app/main_loop'
 require_relative 'app/balances'
 
 require_relative 'lib/float'
+require_relative 'lib/hash'
 require_relative 'lib/array'
 require_relative 'lib/chart_data'
 require_relative 'lib/competitor'

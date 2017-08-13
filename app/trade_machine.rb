@@ -100,11 +100,33 @@ class TradeMachine
   def handle_telegram
     cmds = {
       '/debug' => lambda { binding.pry },
-      '/lastbuy' => lambda { Responder.current.reply(hermes.last_buy_price.try(:round, 2) || "no last buy") },
-      '/state' => lambda { Responder.current.reply(state) },
+      '/lastbuy' => lambda { telegram_msg(hermes.last_buy_price.try(:round, 2) || "no last buy") },
+      '/state' => lambda { telegram_msg(state) },
+      '/buyprice' => lambda { telegram_msg(buy_price.round(2)) },
+      '/sellprice' => lambda { telegram_msg(sell_price.round(2)) },
+      '/changes' => lambda { telegram_msg(Changer.new(poloniex_client_clazz, pair).changes.to_s) },
+      '/profitpoint' => lambda { telegram_msg(profit_point) },
+      '/info' => lambda do
+        telegram_msg({"buy_price" => buy_price.round(2),
+                      "sell_price" => sell_price.round(2),
+                      "profit_point" => profit_point.try(:round, 2) || "no profit point",
+                      "last_buy_price" => hermes.last_buy_price.try(:round, 2) || "no last buy"}.frmt)
+      end,
+      '/help' => lambda do
+        buttons = cmds.keys.each_slice(3).map do |i|
+          i.map { |j| Telegram::Bot::Types::InlineKeyboardButton.new(text: j, callback_data: j)}
+        end
+        markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: buttons)
+        Responder.current.reply("Commands:", markup)
+      end
     }
     return unless last_msg
-    return unless cmds[last_msg]
+    unless cmds[last_msg]
+      l = cmds['/help']
+      drop_last_msg
+      l.call
+      return
+    end
 
     logger.info("Received cmd: #{last_msg}")
     l = cmds[last_msg]
@@ -228,7 +250,7 @@ class TradeMachine
   end
 
   def check_reached_profit_point?
-    sell_price > profit_point
+    buy_price > profit_point
   end
 
   def profit_point
