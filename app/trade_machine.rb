@@ -112,6 +112,7 @@ class TradeMachine
                       "profit_point" => profit_point.try(:round, 2) || "no profit point",
                       "last_buy_price" => hermes.last_buy_price.try(:round, 2) || "no last buy"}.frmt)
       end,
+      '/balances' => lambda { telegram_msg(Balances.new(poloniex_client_clazz).balances!.frmt) },
       '/help' => lambda do
         buttons = cmds.keys.each_slice(3).map do |i|
           i.map { |j| Telegram::Bot::Types::InlineKeyboardButton.new(text: j, callback_data: j)}
