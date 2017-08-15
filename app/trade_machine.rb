@@ -76,7 +76,7 @@ class TradeMachine
 
   def logger
     @logger ||= begin
-      path = BASE_PATH + CONFIG[:captain_log_path] + ".#{mode}"
+      path = BASE_PATH + CONFIG[:captain_log_path] + '.' + pair + ".#{mode}"
       puts "Log written to #{path}"
       res = Logger.new(path)
 
