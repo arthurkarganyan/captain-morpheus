@@ -31,7 +31,6 @@ class TradeMachine
 
     a = "[#{self.class}:#{pair}]"
     logger.info("#{a} created with state: #{state_color(@state)}")
-    telegram_msg("#{a} created with state: #{@state}")
   end
 
   def transit(to_state, action)
@@ -53,7 +52,7 @@ class TradeMachine
 
     send(action)
     logger.info("Changed state from #{state_color(state)} -> #{state_color(to_state)}")
-    telegram_msg("Changed state from #{state} -> #{to_state}")
+    telegram_msg("#{pair}: Changed state from #{state} -> #{to_state}")
     @state = to_state
     redis.set(redis_state_key, to_state) if mode == :production
   end

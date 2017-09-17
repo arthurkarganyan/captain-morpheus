@@ -15,6 +15,7 @@ require_relative 'app/fake_poloniex'
 require_relative 'app/changer'
 require_relative 'app/main_loop'
 require_relative 'app/balances'
+require_relative 'app/telegram_commander'
 
 require_relative 'lib/float'
 require_relative 'lib/hash'

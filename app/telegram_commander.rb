@@ -1,6 +1,8 @@
-class MainLoop
-  LANGUAGES = [:en, :fr, :es]
-  SLEEP_TIME = 5
+class TelegramCommander
+
+  def handle(last_msg)
+
+  end
 
   def handle_telegram
     cmds = {
@@ -27,27 +29,16 @@ class MainLoop
       end
     }
     return unless last_msg
-    return cmds['/help'].call unless cmds[last_msg]
+    unless cmds[last_msg]
+      l = cmds['/help']
+      drop_last_msg
+      l.call
+      return
+    end
 
     logger.info("Received cmd: #{last_msg}")
     l = cmds[last_msg]
+    drop_last_msg
     l.call
-  end
-
-  def run
-    Telegram::Bot::Client.run(CONFIG[:bot_token], logger: BOT_LOGGER, timeout: 3) do |bot|
-      bot.logger.info('Bot has been started')
-
-      loop do
-        bot.fetch_updates { |msg| Responder.find_or_create(bot, msg).handle! }
-
-        # if @telegram_options.nil? || @telegram_options != trade_machines.flat_map(&:telegram_options)
-        #   @telegram_options = trade_machines.flat_map(&:telegram_options)
-        #   Responder.current.add_kb(@telegram_options) if @telegram_options.size > 0
-        # end
-
-        sleep SLEEP_TIME
-      end
-    end
   end
 end
