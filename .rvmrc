@@ -1,1 +1,1 @@
-rvm use 2.3.0@${PWD##*/} --create
+rvm use 2.3.0@morpheus --create
