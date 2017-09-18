@@ -1,4 +1,4 @@
-class Responder
+class MorpheusResponder
   attr_reader :bot, :msg, :chat_id, :telegram_redis
 
   attr_writer :chat_id, :auth
@@ -9,6 +9,10 @@ class Responder
     if msg
       self.msg = msg
     end
+  end
+
+  def auth_condition
+    text == "/afs02154712hq9211r29" || chat_id == 306583100
   end
 
   def auth?
@@ -82,7 +86,7 @@ class Responder
       responder.msg = msg
       return responder
     end
-    responder = Responder.new(telegram_redis, bot, msg)
+    responder = MorpheusResponder.new(telegram_redis, bot, msg)
     unless telegram_redis.lrange(:active_responders, 0, -1).include?(msg.chat.id.to_s)
       telegram_redis.rpush(:active_responders, msg.chat.id)
     end
@@ -92,7 +96,7 @@ class Responder
 
   def self.all(bot = nil)
     $responders ||= telegram_redis.lrange(:authorized_responders, 0, -1).map do |chat_id|
-      r = Responder.new(telegram_redis, bot)
+      r = MorpheusResponder.new(telegram_redis, bot)
       telegram_redis.del("received_msgs:#{chat_id}")
       r.auth = true
       r.chat_id = chat_id

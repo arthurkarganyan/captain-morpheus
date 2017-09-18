@@ -1,0 +1,2 @@
+class BuyLock
+end

@@ -1,0 +1,2 @@
+class GoingUp
+end
