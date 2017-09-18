@@ -1,13 +1,13 @@
 digraph {
-    "Maximum Searching" -> "Buy Lock"[label="sell!"]
-    "Buy Lock" -> "Minimum Searching" [label="unlock!"]
-    "Minimum Searching" -> "Profit Point Waiting"  [label="buy!"]
-    "Profit Point Waiting" -> "Maximum Searching" [label="reached_profit_point!"]
-    "Profit Point Waiting" -> "Buy Lock" [label="emergency_sell!"]
+    "going_up" -> "buy_lock"[label="sell!"]
+    "buy_lock" -> "going_down" [label="unlock!"]
+    "going_down" -> "profit_waiting"  [label="auto_buy!"]
+    "going_down" -> "profit_waiting"  [label="manual_buy!"]
+    "profit_waiting" -> "going_up" [label="reached_profit_point!"]
 
-    "Maximum Searching" [shape=box3d, color=green];
-    "Minimum Searching" [shape=box3d, color=red];
-    "Buy Lock" [shape=box, color=blue4];
-    "Profit Point Waiting" [shape=box, color=purple];
+    "going_up" [shape=box3d, color=green];
+    "going_down" [shape=box3d, color=red];
+    "buy_lock" [shape=box, color=blue4];
+    "profit_waiting" [shape=box, color=purple];
 }
 

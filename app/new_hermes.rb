@@ -1,9 +1,8 @@
 class NewHermes
-  attr_reader :logger, :sell_price, :notifier, :pair, :poloniex_clazz, :redis
+  attr_reader :sell_price, :notifier, :pair, :poloniex_clazz, :redis
   attr_accessor :last_buy_usd, :profit_sum
 
-  def initialize(logger, pair, poloniex_clazz, redis)
-    @logger = logger
+  def initialize(pair, poloniex_clazz, redis)
     @pair = pair
     @profit_sum = 0.0
     @poloniex_clazz = poloniex_clazz
@@ -73,7 +72,7 @@ class NewHermes
     self.last_buy_price = sell_price
     self.balance_btc = AFTER_FEE*(balance_usd / sell_price)
     tmp = AFTER_FEE*(balance_usd / sell_price)
-    logger.info("Buy:  got #{"%0.5f" % tmp} for #{sell_price/AFTER_FEE} | -#{"%0.2f" % balance_usd} USD")
+    Morpheus.logger.info("Buy:  got #{"%0.5f" % tmp} for #{sell_price/AFTER_FEE} | -#{"%0.2f" % balance_usd} USD")
     self.balance_usd = 0.0
     res
   end
@@ -85,7 +84,7 @@ class NewHermes
 
     res = poloniex_clazz.sell(pair, sell_price, (balance_btc))
 
-    logger.info("Sell: got #{"%0.1f" % balance_usd} USD for #{"%0.1f" % (sell_price*AFTER_FEE)} | -#{"%0.5f" % balance_btc} BTC | Profit=#{profit(sell_price).round(1).traffic_light(0.0)} | Sum=#{profit_sum.round(1).traffic_light(0.0)}")
+    Morpheus.logger.info("Sell: got #{"%0.1f" % balance_usd} USD for #{"%0.1f" % (sell_price*AFTER_FEE)} | -#{"%0.5f" % balance_btc} BTC | Profit=#{profit(sell_price).round(1).traffic_light(0.0)} | Sum=#{profit_sum.round(1).traffic_light(0.0)}")
     self.balance_btc = 0.0
     self.last_buy_usd = 0.0
     self.last_buy_price = 0.0
@@ -99,5 +98,9 @@ class NewHermes
     else
       balance_usd
     end
+  end
+
+  def profit_point
+    hermes.last_buy_price / AFTER_FEE
   end
 end

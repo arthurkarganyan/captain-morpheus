@@ -18,7 +18,7 @@ class AbstractResponder
   cmd :afs02154712hq9211r29, ->(responder) { responder.reply("You are authorized!") }
 
   def logger
-    @logger ||= Logger.new("log/bot.log")
+    @logger ||= Morpheus.logger
   end
 
   def auth?
