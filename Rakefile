@@ -1,8 +1,7 @@
 require_relative 'load_config'
 
-task :c do
-  binding.pry
-end
+task(:c) { binding.pry }
+task(:dot) { DotBuilder.run }
 
 task :moose do
   range = -1200..-1
@@ -160,29 +159,4 @@ task :test_trade_machine do
   binding.pry
   # trade_machine = TradeMachine.new("USDT_BTC")
   # trade_machine.run!
-end
-
-task :test_price_at do
-  open = 200.0
-  high = 240.0
-  low = 180.0
-  close = 210.0
-
-  period = 300
-
-  fake_poloniex = Candle.new(period)
-
-  ary = Array.new(period) { |i| fake_poloniex.price_at(open, high, low, close, i) }
-
-  fast_plot(price: ary)
-end
-
-
-task :lead_the_way do
-  c = Captain.new
-
-  loop do
-    c.lead_the_way!
-    sleep 60
-  end
 end

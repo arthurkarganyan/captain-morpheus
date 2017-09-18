@@ -10,6 +10,13 @@ class TradeMachine
     profit_waiting: {reached_profit_point!: :going_up}
   }
 
+  COLORS = {
+    going_up: :green,
+    buy_lock: :blue,
+    going_down: :red,
+    profit_waiting: :magenta
+  }
+
   STATES = TRANSITIONS.keys
 
   attr_reader :state, :hermes, :pair, :stepted_out
@@ -78,12 +85,7 @@ class TradeMachine
   end
 
   def state_color(state)
-    h={going_up: :green,
-       buy_lock: :blue,
-       going_down: :red,
-       profit_waiting: :magenta}
-
-    state.to_s.colorize(h[state])
+    state.to_s.colorize(COLORS[state])
   end
 
   def current_sma
